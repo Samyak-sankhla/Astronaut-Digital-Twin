@@ -196,7 +196,145 @@ Scientific and XML consistency checks are summarized in docs/scenario_scientific
 - CMakeLists.txt: build configuration
 - README.md and LICENSE: project documentation and licensing
 
-## 12. GitHub Upload Guidance (Only Necessary Files)
+## 12. Backend Source Documentation (src)
+
+This section documents the implementation-level structure of the backend service in src.
+
+### 12.1 Startup and Process Lifecycle
+
+- main.cpp
+    Initializes signal handlers for graceful shutdown (SIGINT, SIGTERM), resolves runtime directories, and starts all major runtime services.
+- Initialization order
+    1) BioGears engine initialization, 2) initial state extraction, 3) simulation loop start, 4) API server start.
+- Shutdown order
+    API server stop, scenario worker stop, simulation loop stop.
+
+### 12.2 API Layer
+
+- ApiServer.h / ApiServer.cpp
+    Owns the HTTP server, route registration, and endpoint response handling.
+- CORS behavior
+    Supports cross-origin frontend usage with permissive origin/method/header policy.
+- State delivery patterns
+    Exposes both polling-friendly JSON endpoints and a server-sent events stream endpoint.
+- Event handling behavior
+    Parses JSON payloads, applies default values where defined, performs request validation, and returns structured JSON status/error responses.
+- Activity logging
+    Writes API activity lines with timestamp and status marker (OK/FAIL) to the runtime log file.
+
+### 12.3 Event Translation Layer
+
+- EventProcessor.h / EventProcessor.cpp
+    Converts API-level event intents into engine-level actions.
+- Timed actions
+    Supports auto-stop logic for duration-scoped exercise and infusions using timer threads.
+- Lifetime safety
+    Destructor prevents timer leaks by stopping acceptance of new timers and joining all timer threads.
+
+### 12.4 Engine Integration Layer
+
+- BioGearsEngineManager.h / BioGearsEngineManager.cpp
+    Central adapter for all BioGears interactions and physiology action APIs.
+- Engine bootstrap
+    Sets BioGears data root, creates engine instance, loads the standard initial patient state, and tracks initialization health.
+- Action surface
+    Exercise (generic/cycling/strength), hydration, nutrition, drug infusion, compound infusion, stress, hemorrhage, bolus, oral dose, pain stimulus, environment changes, and microgravity mode transitions.
+- Drug interaction control logic
+    Maintains active infusion map and recomputes effective delivery rates/concentrations with interaction-aware modifiers across drug classes.
+- Microgravity controller
+    Maintains internal state machine for microgravity progression and re-entry behavior, including stress and volume-loss proxy control updates and validation checkpoints.
+- Concurrency model
+    Uses a mutex-protected engine access pattern so simulation stepping and external events remain thread-safe.
+
+### 12.5 Simulation Clock and State Store
+
+- SimulationLoop.h / SimulationLoop.cpp
+    Worker thread that advances model time at a fixed cadence and applies simulation speed scaling.
+- Timing strategy
+    Uses steady-clock scheduling with sleep-until behavior to keep update cadence stable.
+- PhysiologyState.h / PhysiologyState.cpp
+    Thread-safe latest snapshot plus rolling history buffer for time-series inspection.
+- JSON contract mapping
+    Converts internal vitals fields to API-facing names used by frontend and tests.
+
+### 12.6 Scenario Execution System
+
+- ScenarioPlayer.h / ScenarioPlayer.cpp
+    Scenario discovery, metadata extraction, asynchronous scenario playback, and status tracking.
+- Discovery model
+    Scans scenario categories from runtime folders, parses descriptions, and sorts with astronaut category precedence.
+- Playback model
+    Processes action sequences from XML and dispatches action types to engine calls.
+- Action coverage in dispatcher
+    AdvanceTime, EnvironmentChange, AcuteStress, Exercise variants, ConsumeNutrients, Hemorrhage, SubstanceInfusion, SubstanceCompoundInfusion, SubstanceBolus, PainStimulus, and SubstanceOralDose.
+- Unit normalization
+    Includes unit conversions required by scenario content (for example ug/mL to mg/mL and mL/hr to mL/min where applicable).
+
+## 13. Frontend Documentation (frontend)
+
+The frontend is a single-page static monitoring and control console designed to operate directly against the backend API.
+
+### 13.1 Technology and Runtime Model
+
+- frontend/index.html
+    Contains layout, styling, and JavaScript control logic in one static artifact.
+- Serving model
+    Launched as static content through run_frontend.sh (Python HTTP server).
+- API target
+    Default backend target is localhost:8080.
+
+### 13.2 UI Composition
+
+- Header status
+    Shows connection health, simulation context, and active action progress indicators.
+- Sidebar control panels
+    Event controls for exercise, hydration, nutrition, drug infusion, fluid therapy, stress, microgravity, and scenario operations.
+- Main telemetry area
+    Real-time vital cards and trend charts for key physiological measures.
+- Clinical assistive panels
+    Recommendation and event-analysis surfaces that summarize directional physiological changes.
+
+### 13.3 State Update and Polling Strategy
+
+- Continuous polling
+    Polls backend state at fixed interval for dashboard refresh.
+- Scenario polling
+    Polls scenario status independently to render progress, active state, and completion behavior.
+- Local buffers
+    Maintains short and medium windows of recent vitals to compute deltas and trends.
+
+### 13.4 Visualization and Interpretation
+
+- Charting
+    Uses Chart.js line charts for heart rate, MAP, and respiration trends.
+- Threshold system
+    Applies normal/warn/critical classing to vital cards.
+- Delta indicators
+    Compares current readings with recent history to show directional arrows and magnitude hints.
+- Trend estimation
+    Uses rolling-window slope approximation for recommendation logic.
+
+### 13.5 Action Workflow and UX Safety
+
+- Locked action execution
+    During active interventions, relevant controls are temporarily locked to reduce conflicting commands.
+- Action progress
+    Displays intervention progress bar and timing estimate for user feedback.
+- Post-action summary
+    Captures before/after snapshots and renders compact delta summaries.
+- Scenario control
+    Supports scenario list fetch, run, progress tracking, and explicit stop flow.
+
+### 13.6 User Feedback and Diagnostics
+
+- Toast notifications
+    Displays API success/failure outcomes.
+- Activity log
+    Shows timestamped operation history in the UI.
+- Connectivity indicator
+    Reflects backend availability status for quick operator awareness.
+
+## 14. GitHub Upload Guidance (Only Necessary Files)
 
 Push these:
 
@@ -224,13 +362,13 @@ If the biogears directory becomes very large in future revisions, consider enabl
 
 This repository is now set up with ignore rules so accidental local artifacts are not committed.
 
-## 13. Known Limitations
+## 15. Known Limitations
 
 - Gravity transitions are approximated rather than mechanistically modeled.
 - External BioGears installation path conventions can differ by machine and may require environment-variable overrides.
 - Frontend is a prototype UI, not a production visualization stack.
 
-## 14. Roadmap Suggestions
+## 16. Roadmap Suggestions
 
 - Add startup environment validation checks with clear remediation messages.
 - Add CI for build and smoke tests.
@@ -238,6 +376,6 @@ This repository is now set up with ignore rules so accidental local artifacts ar
 - Add containerized development/runtime option.
 - Expand validation suite for physiology acceptance thresholds.
 
-## 15. License
+## 17. License
 
 MIT License. See LICENSE.
