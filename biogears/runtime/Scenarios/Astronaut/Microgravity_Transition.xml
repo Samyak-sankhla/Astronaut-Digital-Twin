@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Microgravity_Transition
+  Simulates an astronaut entering microgravity (e.g., orbital insertion):
+    1. Baseline at 1-g (standard environment) — 2 min
+    2. Switch to ISS_Cabin environment (reduced convection, elevated CO2) — ISS conditions
+    3. Apply mild AcuteStress (0.2) — models headward fluid shift neurohumoral response
+       (increased sympathetic tone, mild tachycardia, elevated BP transiently)
+    4. Run for 10 min — observe cardiovascular adaptation
+    5. Reduce stress to 0.1 (adaptation plateau)
+    6. Run for 15 min — observe new steady state
+  Clinical correlates: HR ↑ ~10-15 bpm, SV ↓ slightly, MAP maintained or ↑ transiently.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Microgravity_Transition</Name>
+  <Description>Astronaut transitions from 1-g to microgravity (ISS orbital insertion). Models headward fluid shift via environment change + neurohumoral stress response.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume"        Unit="mL"     Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg"  Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure"    Unit="mmHg"   Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation"         Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature"          Unit="degC"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystemicVascularResistance" Unit="mmHg s/mL" Precision="3"/>
+    <DataRequest xsi:type="SubstanceDataRequestData"  Substance="Epinephrine" Name="BloodConcentration" Unit="ug/L" Precision="6"/>
+    <DataRequest xsi:type="EnvironmentDataRequestData" Name="AtmosphericPressure"     Unit="mmHg"   Precision="1"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Baseline at 1-g -->
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+
+    <!-- Enter microgravity: switch to ISS cabin environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+
+    <!-- Headward fluid shift: mild sympathetic activation -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.2"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Partial adaptation: reduce stress to chronic low level -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.1"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+  </Actions>
+</Scenario>

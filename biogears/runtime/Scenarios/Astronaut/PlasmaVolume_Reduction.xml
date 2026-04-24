@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plasma Volume Reduction (Microgravity Cardiovascular Deconditioning)
+  In microgravity, cephalad fluid shift triggers renal diuresis and reduced
+  thirst, leading to a 10–15% plasma volume loss within the first 24–48 hours.
+  Over weeks, total blood volume decreases ~10%.
+
+  This scenario approximates the acute phase of plasma volume reduction:
+    1. Enter ISS environment + low background stress (microgravity state)
+    2. Model fluid loss: two episodes of urination (ConsumeNutrients with negative
+       water is not supported — BioGears doesn't have a direct "diuresis" action,
+       so we use a combined approach: mild Hemorrhage action simulates plasma
+       volume reduction from diuresis, or we simply observe the physiology
+       over time in the microgravity environment)
+    3. Observe cardiovascular consequences: reduced stroke volume, compensatory
+       tachycardia, reduced MAP if severe enough.
+
+  Note: BioGears doesn't have explicit diuresis control from microgravity.
+  A mild hemorrhage (0.3 mL/min rate, 15 min) is used as a proxy for the
+  ~250 mL plasma loss in the acute adaptation phase.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>PlasmaVolume_Reduction</Name>
+  <Description>Models acute plasma volume reduction from microgravity-induced diuresis (~250 mL loss over 15 min). Observe: reduced SV, compensatory HR rise, potential MAP drop.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume"        Unit="mL"     Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg"  Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure"    Unit="mmHg"   Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="UrineProductionRate"      Unit="mL/min" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystemicVascularResistance" Unit="mmHg s/mL" Precision="3"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Microgravity environment + neurohumoral response -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.15"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Acute plasma loss: haemorrhage as diuresis proxy (slow, low-severity) -->
+    <!-- Rate: ~16.7 mL/min to lose ~250 mL over 15 min from aorta compartment -->
+    <Action xsi:type="HemorrhageData">
+      <Compartment>Aorta</Compartment>
+      <InitialRate unit="mL/min" value="16.7"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+
+    <!-- Stop fluid loss — diuresis resolves -->
+    <Action xsi:type="HemorrhageData">
+      <Compartment>Aorta</Compartment>
+      <InitialRate unit="mL/min" value="0.0"/>
+    </Action>
+
+    <!-- Observe cardiovascular compensation -->
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+  </Actions>
+</Scenario>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ARED Exercise (Advanced Resistive Exercise Device)
+  The ARED is the ISS resistance training device providing up to 272 kg (600 lb)
+  of vacuum-cylinder resistance. Astronauts perform 6 exercises per session,
+  2–3 sets of 6–8 reps per exercise, ~90 min total session.
+
+  Protocol modelled here (representative session):
+    Warm-up:      5 min light cycling equivalent (GenericExercise intensity 0.2)
+    Back squat:   3 × 8 reps @ 140 kg  (1 min work + 2 min rest per set)
+    Deadlift:     3 × 6 reps @ 160 kg  (1 min work + 2 min rest per set)
+    Heel raise:   3 × 8 reps @ 130 kg  (1 min work + 2 min rest per set)
+    Row:          3 × 8 reps @  90 kg  (1 min work + 2 min rest per set)
+    Bench press:  3 × 8 reps @ 100 kg  (1 min work + 2 min rest per set)
+    Cool-down:    5 min low intensity
+
+  Performed in ISS cabin environment.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>ARED_Exercise</Name>
+  <Description>ARED resistance training session on ISS. 5 exercises, 3 sets each, 6-8 reps at heavy load. 90 min total including warm-up and cool-down.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenConsumptionRate"    Unit="mL/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="TotalMetabolicRate"       Unit="kcal/day" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="AchievedExerciseLevel"    Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="FatigueLevel"             Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature"          Unit="degC"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SweatRate"                Unit="mg/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MuscleGlycogen"           Unit="g"      Precision="2"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Set ISS cabin environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+
+    <!-- Warm-up: 5 min light aerobic -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.2"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.0"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+
+    <!-- Back squat — 3 sets × 8 reps @ 140 kg -->
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="140" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="140" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="140" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="3" unit="min"/></Action>
+
+    <!-- Deadlift — 3 sets × 6 reps @ 160 kg -->
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="160" unit="kg"/><Repetitions value="6"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="160" unit="kg"/><Repetitions value="6"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="160" unit="kg"/><Repetitions value="6"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="3" unit="min"/></Action>
+
+    <!-- Row — 3 sets × 8 reps @ 90 kg -->
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="90" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="90" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="90" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="3" unit="min"/></Action>
+
+    <!-- Bench press — 3 sets × 8 reps @ 100 kg -->
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="100" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="100" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="100" unit="kg"/><Repetitions value="8"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+    <Action xsi:type="ExerciseData"><StrengthExercise><Weight value="0" unit="kg"/><Repetitions value="0"/></StrengthExercise></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="3" unit="min"/></Action>
+
+    <!-- Cool-down -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.15"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.0"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+  </Actions>
+</Scenario>

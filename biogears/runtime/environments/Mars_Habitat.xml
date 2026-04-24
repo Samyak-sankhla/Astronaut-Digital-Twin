@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!--
+  Mars Habitat Internal Environment (pressurized habitat, not Martian ambient atmosphere).
+  Assumptions (long-stay habitat compromise between EVA-prebreathe and comfort):
+    - Pressure: 533 mmHg (~10.3 psi)
+    - O2 fraction: 0.27  -> pO2 ~144 mmHg
+    - CO2 fraction: 0.006 -> pCO2 ~3.2 mmHg (elevated but controlled)
+    - N2 balance: 0.724
+  Gas fractions sum to 1.0 by design.
+-->
+<EnvironmentalConditions xmlns="uri:/mil/tatrc/physiology/datamodel"
+                         contentVersion="Biogears_7.5.0+85"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xsi:schemaLocation="uri:/mil/tatrc/physiology/datamodel BioGearsDataModel.xsd">
+  <Name>Mars_Habitat</Name>
+  <SurroundingType>Air</SurroundingType>
+  <AirVelocity readOnly="false" unit="m/s" value="0.08"/>
+  <AmbientTemperature readOnly="false" unit="degC" value="22.0"/>
+  <AtmosphericPressure readOnly="false" unit="mmHg" value="533"/>
+  <ClothingResistance readOnly="false" unit="clo" value="0.5"/>
+  <Emissivity readOnly="false" value="0.9"/>
+  <MeanRadiantTemperature readOnly="false" unit="degC" value="22.0"/>
+  <RelativeHumidity readOnly="false" unit="" value="0.45"/>
+  <RespirationAmbientTemperature readOnly="false" unit="degC" value="22.0"/>
+  <AmbientGas Name="Nitrogen">
+    <FractionAmount readOnly="false" value="0.724"/>
+  </AmbientGas>
+  <AmbientGas Name="Oxygen">
+    <FractionAmount readOnly="false" value="0.270"/>
+  </AmbientGas>
+  <AmbientGas Name="CarbonDioxide">
+    <FractionAmount readOnly="false" value="0.006"/>
+  </AmbientGas>
+</EnvironmentalConditions>

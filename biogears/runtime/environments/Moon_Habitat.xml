@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!--
+  Moon Habitat Internal Environment (pressurized habitat, not lunar vacuum).
+  Assumptions (Artemis-like reduced-pressure atmosphere):
+    - Pressure: 424 mmHg (~8.2 psi)
+    - O2 fraction: 0.34  -> pO2 ~144 mmHg (near terrestrial inspired O2)
+    - CO2 fraction: 0.004 -> pCO2 ~1.7 mmHg (controlled cabin CO2)
+    - N2 balance: 0.656
+  Gas fractions sum to 1.0 by design.
+-->
+<EnvironmentalConditions xmlns="uri:/mil/tatrc/physiology/datamodel"
+                         contentVersion="Biogears_7.5.0+85"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xsi:schemaLocation="uri:/mil/tatrc/physiology/datamodel BioGearsDataModel.xsd">
+  <Name>Moon_Habitat</Name>
+  <SurroundingType>Air</SurroundingType>
+  <AirVelocity readOnly="false" unit="m/s" value="0.08"/>
+  <AmbientTemperature readOnly="false" unit="degC" value="22.0"/>
+  <AtmosphericPressure readOnly="false" unit="mmHg" value="424"/>
+  <ClothingResistance readOnly="false" unit="clo" value="0.5"/>
+  <Emissivity readOnly="false" value="0.9"/>
+  <MeanRadiantTemperature readOnly="false" unit="degC" value="22.0"/>
+  <RelativeHumidity readOnly="false" unit="" value="0.45"/>
+  <RespirationAmbientTemperature readOnly="false" unit="degC" value="22.0"/>
+  <AmbientGas Name="Nitrogen">
+    <FractionAmount readOnly="false" value="0.656"/>
+  </AmbientGas>
+  <AmbientGas Name="Oxygen">
+    <FractionAmount readOnly="false" value="0.340"/>
+  </AmbientGas>
+  <AmbientGas Name="CarbonDioxide">
+    <FractionAmount readOnly="false" value="0.004"/>
+  </AmbientGas>
+</EnvironmentalConditions>

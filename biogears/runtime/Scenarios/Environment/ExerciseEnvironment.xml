@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					contentVersion="BioGears_6.3.0-beta"
+					xsi:schemaLocation="">
+	<Name>ExerciseEnvironment</Name>
+	<Description>Moderate aerobic exercise in a warm environment to evaluate thermal and cardiopulmonary response.</Description>
+	<InitialParameters>
+		<PatientFile>StandardMale.xml</PatientFile>
+	</InitialParameters>
+
+	<DataRequests SamplesPerSecond="50">
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate" Unit="1/min" Precision="2"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate" Unit="1/min" Precision="2"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput" Unit="L/min" Precision="2"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure" Unit="mmHg" Precision="1"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature" Unit="degC" Precision="2"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="SweatRate" Unit="mg/min" Precision="2"/>
+		<DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenConsumptionRate" Unit="mL/min" Precision="2"/>
+	</DataRequests>
+
+	<Actions>
+		<Action xsi:type="EnvironmentChangeData">
+			<ConditionsFile>environments/ExerciseEnvironment.xml</ConditionsFile>
+		</Action>
+		<Action xsi:type="AdvanceTimeData">
+			<Time value="2" unit="min"/>
+		</Action>
+		<Action xsi:type="ExerciseData">
+			<GenericExercise>
+				<Intensity value="0.45"/>
+			</GenericExercise>
+		</Action>
+		<Action xsi:type="AdvanceTimeData">
+			<Time value="20" unit="min"/>
+		</Action>
+		<Action xsi:type="ExerciseData">
+			<GenericExercise>
+				<Intensity value="0.0"/>
+			</GenericExercise>
+		</Action>
+		<Action xsi:type="AdvanceTimeData">
+			<Time value="10" unit="min"/>
+		</Action>
+	</Actions>
+</Scenario>

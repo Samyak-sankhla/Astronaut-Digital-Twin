@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  COLBERT Treadmill (Combined Operational Load-Bearing External Resistance Treadmill)
+  The COLBERT is the ISS treadmill. A bungee harness loads ~70–80% of body weight
+  to partially simulate ground-reaction forces (without harness, astronauts would
+  float off the belt). This is modelled as running at reduced effective intensity
+  vs. ground-based running at the same speed.
+
+  Protocol modelled (representative 45-min session):
+    ISS environment throughout
+    Warm-up:      5 min walk equivalent (GenericExercise 0.25)
+    Running set:
+      10 min @ 0.45 intensity (~8 km/h with 75% BW harness load)
+      10 min @ 0.55 intensity (~9.5 km/h)
+      10 min @ 0.50 intensity (~8.5 km/h sustained)
+    Cool-down:    5 min walk (0.20)
+    Recovery:     5 min rest
+
+  Note: BioGears RunningExercise uses speed + incline. Generic intensity is used
+  here as a simpler approximation for the harness-loaded gait pattern.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>COLBERT_Treadmill</Name>
+  <Description>COLBERT treadmill session on ISS. 30-min running set (harness-loaded, ~70% BW) with warm-up and cool-down. Performed in ISS cabin environment.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenConsumptionRate"    Unit="mL/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="TotalMetabolicRate"       Unit="W"      Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="AchievedExerciseLevel"    Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="FatigueLevel"             Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature"          Unit="degC"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SweatRate"                Unit="mg/min" Precision="2"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- ISS cabin environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+
+    <!-- Warm-up walk -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.25"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Running: ~8 km/h harness-loaded -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.45"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Running: ~9.5 km/h -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.55"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Running: ~8.5 km/h sustained -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.50"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Cool-down walk -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.20"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Stop + recovery -->
+    <Action xsi:type="ExerciseData">
+      <GenericExercise><Intensity value="0.0"/></GenericExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+  </Actions>
+</Scenario>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Moon_Gravity_Transition
+  Purpose: Transition from microgravity to lunar partial gravity (~0.165 g).
+
+  BioGears note:
+  BioGears does not currently expose direct gravity-level control in scenario actions.
+  This scenario approximates gravitational cardiovascular loading by:
+    1) Moving from ISS cabin to a lunar habitat atmosphere.
+    2) Applying moderate AcuteStress as a proxy for partial venous pooling and
+       sympathetic activation during reloading.
+
+  Expected physiology:
+    - HR increases modestly above microgravity baseline.
+    - MAP may dip mildly, then stabilize with compensation.
+    - CVP remains above Earth-return challenge levels.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Moon_Gravity_Transition</Name>
+  <Description>Transition from microgravity to lunar partial gravity in a pressurized Moon habitat; models partial cardiovascular reloading and adaptation.</Description>
+  <InitialParameters>
+    <PatientFile>StandardMale.xml</PatientFile>
+  </InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput" Unit="L/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume" Unit="mL" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure" Unit="mmHg" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume" Unit="L" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation" Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="EnvironmentDataRequestData" Name="AtmosphericPressure" Unit="mmHg" Precision="1"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Establish microgravity baseline -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.10"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Enter Moon habitat and re-load to lunar gravity equivalent -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/Moon_Habitat.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.18"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+
+    <!-- Early adaptation plateau -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.12"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="20" unit="min"/></Action>
+  </Actions>
+</Scenario>

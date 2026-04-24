@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Exercise With Rehydration (Complete ISS Exercise + Recovery Protocol)
+  Full workflow: microgravity environment → CEVIS-style cycling → sweat loss →
+  post-exercise rehydration + recovery meal → observe restoration.
+
+  Combines: environment, exercise, hydration, nutrition in a single scenario
+  to validate the full event pipeline.
+
+  Protocol:
+    ISS env throughout
+    Baseline:       2 min observation
+    Cycling:        30 min @ 0.5 intensity (moderate aerobic)
+    Rehydration:    0.6 L water consumed immediately post-exercise
+    Recovery meal:  standard astronaut post-exercise meal
+    Recovery obs:   20 min observation
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Exercise_With_Rehydration</Name>
+  <Description>Full ISS exercise session with post-exercise rehydration and recovery meal. Validates environment + exercise + nutrition pipeline in one scenario.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenConsumptionRate"    Unit="mL/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="TotalMetabolicRate"       Unit="W"      Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature"          Unit="degC"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SweatRate"                Unit="mg/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MuscleGlycogen"           Unit="g"      Precision="2"/>
+    <DataRequest xsi:type="SubstanceDataRequestData"  Substance="Glucose" Name="BloodConcentration" Unit="mg/dL" Precision="1"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- ISS cabin environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+
+    <!-- CEVIS-style cycling: 30 min moderate intensity -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="75" unit="1/min"/>
+        <Power   value="120" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="30" unit="min"/></Action>
+
+    <!-- Stop exercise -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="0" unit="1/min"/>
+        <Power   value="0" unit="W"/>
+      </CyclingExercise>
+    </Action>
+
+    <!-- Immediate rehydration: 0.6 L water -->
+    <Action xsi:type="ConsumeNutrientsData">
+      <Nutrition>
+        <Water unit="L" value="0.6"/>
+      </Nutrition>
+    </Action>
+
+    <!-- Post-exercise recovery meal (5 min after stopping) -->
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+    <Action xsi:type="ConsumeNutrientsData">
+      <NutritionFile>nutrition/AstronautMeal_PostExercise.xml</NutritionFile>
+    </Action>
+
+    <!-- Recovery observation -->
+    <Action xsi:type="AdvanceTimeData"><Time value="20" unit="min"/></Action>
+  </Actions>
+</Scenario>

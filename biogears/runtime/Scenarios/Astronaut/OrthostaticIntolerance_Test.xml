@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Orthostatic Intolerance Stand Test
+  Standard post-landing assessment: passive stand or tilt-table test to evaluate
+  cardiovascular deconditioning after long-duration spaceflight.
+
+  Protocol (NASA 10-min stand test):
+    1. Start in microgravity state (ISS env + low stress, reduced blood volume)
+    2. Return to standard environment (landing)
+    3. Simulate orthostatic challenge: gravity loads blood into lower extremities
+       → modelled as progressive AcuteStress + mild haemorrhage proxy for
+       venous pooling in legs
+    4. Observe: HR, MAP, presence of presyncope (MAP < 60 mmHg threshold)
+    5. Countermeasure option: saline infusion (can be added via API)
+
+  Clinical endpoint: presyncope if MAP drops <60 mmHg for >30 s.
+  A normal deconditioned astronaut shows HR ↑20–30 bpm + MAP drop 10–20 mmHg.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>OrthostaticIntolerance_Test</Name>
+  <Description>Post-landing 10-min stand test. Orthostatic stress after microgravity deconditioning. Observe MAP drop, reflex tachycardia, and presyncope risk.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume"        Unit="mL"     Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg"  Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure"    Unit="mmHg"   Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystemicVascularResistance" Unit="mmHg s/mL" Precision="3"/>
+    <DataRequest xsi:type="SubstanceDataRequestData"  Substance="Epinephrine" Name="BloodConcentration" Unit="ug/L" Precision="6"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Pre-test: deconditioned microgravity state -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.1"/></Action>
+    <!-- Simulate reduced blood volume from weeks of microgravity diuresis -->
+    <Action xsi:type="HemorrhageData">
+      <Compartment>Aorta</Compartment>
+      <InitialRate unit="mL/min" value="20.0"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+    <Action xsi:type="HemorrhageData">
+      <Compartment>Aorta</Compartment>
+      <InitialRate unit="mL/min" value="0.0"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+
+    <!-- Landing: restore 1-g environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/StandardEnvironment.xml</ConditionsFile>
+    </Action>
+
+    <!-- Stand test: acute orthostatic stress — venous pooling in legs -->
+    <!-- Phase 1: immediate gravitational load (0–2 min) -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.4"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+
+    <!-- Phase 2: sustained stand (2–5 min) — baroreflex compensation -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.3"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="3" unit="min"/></Action>
+
+    <!-- Phase 3: continued stand (5–10 min) — late compensation or presyncope -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.25"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Recovery: supine position -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.0"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+  </Actions>
+</Scenario>

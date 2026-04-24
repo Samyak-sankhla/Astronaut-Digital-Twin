@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!--
+  Standard Astronaut Meal — ISS Food System
+  Based on NASA menu data (per-meal fraction of ~2800 kcal/day target):
+    Carbohydrate : 50 g   (~50 % of energy)
+    Protein      : 30 g   (~25 % of energy, ISS target ≥0.8 g/kg/day)
+    Fat          : 20 g   (~25 % of energy)
+    Water        : 0.35 L (meal moisture + drinking water)
+    Sodium       : 0.5 g  (NASA target <3 g/day)
+    Calcium      : 0.3 g  (NASA target 1–1.2 g/day, one-meal portion)
+-->
+<Nutrition xmlns="uri:/mil/tatrc/physiology/datamodel"
+           contentVersion="Biogears_7.5.0+85"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="uri:/mil/tatrc/physiology/datamodel BioGearsDataModel.xsd">
+  <Name>AstronautMeal_Standard</Name>
+  <Carbohydrate readOnly="false" unit="g" value="50"/>
+  <Fat          readOnly="false" unit="g" value="20"/>
+  <Protein      readOnly="false" unit="g" value="30"/>
+  <Calcium      readOnly="false" unit="g" value="0.3"/>
+  <Sodium       readOnly="false" unit="g" value="0.5"/>
+  <Water        readOnly="false" unit="L" value="0.35"/>
+</Nutrition>

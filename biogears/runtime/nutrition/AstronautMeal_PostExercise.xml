@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!--
+  Post-Exercise Recovery Meal — ISS Food System
+  Higher carbohydrate and protein to support glycogen resynthesis and muscle
+  protein synthesis following a 60–90 min exercise bout.
+  Timing: consumed within 30 min post-exercise.
+    Carbohydrate : 70 g   (fast-acting for glycogen resynthesis)
+    Protein      : 40 g   (muscle protein synthesis target ~0.4 g/kg post-exercise)
+    Fat          : 10 g   (lower fat for rapid gastric emptying)
+    Water        : 0.5 L  (rehydration component)
+    Sodium       : 0.6 g  (electrolyte replacement for sweat losses)
+    Calcium      : 0.3 g
+-->
+<Nutrition xmlns="uri:/mil/tatrc/physiology/datamodel"
+           contentVersion="Biogears_7.5.0+85"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="uri:/mil/tatrc/physiology/datamodel BioGearsDataModel.xsd">
+  <Name>AstronautMeal_PostExercise</Name>
+  <Carbohydrate readOnly="false" unit="g" value="70"/>
+  <Fat          readOnly="false" unit="g" value="10"/>
+  <Protein      readOnly="false" unit="g" value="40"/>
+  <Calcium      readOnly="false" unit="g" value="0.3"/>
+  <Sodium       readOnly="false" unit="g" value="0.6"/>
+  <Water        readOnly="false" unit="L" value="0.5"/>
+</Nutrition>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Just_Return_To_Earth
+  Simple Earth-return transition from microgravity.
+
+  Purpose:
+    - Start in ISS-like microgravity state (ISS cabin + low chronic stress)
+    - Transition to Earth 1-g environment
+    - Apply transient orthostatic/autonomic loading
+    - Observe compensation and early recovery
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Just_Return_To_Earth</Name>
+  <Description>Direct return-to-Earth transition from microgravity with transient orthostatic challenge and short recovery observation.</Description>
+  <InitialParameters>
+    <PatientFile>StandardMale.xml</PatientFile>
+  </InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput" Unit="L/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume" Unit="mL" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure" Unit="mmHg" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume" Unit="L" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation" Unit="unitless" Precision="3"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Microgravity baseline -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData">
+      <Severity value="0.10"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData">
+      <Time value="5" unit="min"/>
+    </Action>
+
+    <!-- Earth return / landing -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/StandardEnvironment.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData">
+      <Severity value="0.32"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData">
+      <Time value="8" unit="min"/>
+    </Action>
+
+    <!-- Early compensation -->
+    <Action xsi:type="AcuteStressData">
+      <Severity value="0.18"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData">
+      <Time value="12" unit="min"/>
+    </Action>
+
+    <!-- Recovery trend -->
+    <Action xsi:type="AcuteStressData">
+      <Severity value="0.05"/>
+    </Action>
+    <Action xsi:type="AdvanceTimeData">
+      <Time value="10" unit="min"/>
+    </Action>
+  </Actions>
+</Scenario>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!--
+  ISS Cabin Environment
+  Based on NASA ECLSS (Environmental Control and Life Support System) specs:
+    - Pressure:    760 mmHg (1 atm — ISS maintains sea-level pressure)
+    - O2:          20.9 %
+    - CO2:         0.38 % (~2.9 mmHg partial pressure, nominal ISS level)
+    - Temperature: 22 °C
+    - Humidity:    55 % (ECLSS target 40–60 %)
+    - Air velocity: 0.076 m/s (ECLSS minimum forced ventilation; buoyancy-driven
+                   convection is absent in microgravity — this is the key physical
+                   difference from a terrestrial room at the same pressure)
+  Note: BioGears does not model fluid-shift/plasma-volume directly from gravity.
+  Pairing this environment with an AcuteStress action (severity 0.15–0.25)
+  approximates the neurohumoral response to the headward fluid shift.
+-->
+<EnvironmentalConditions xmlns="uri:/mil/tatrc/physiology/datamodel"
+                         contentVersion="Biogears_7.5.0+85"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xsi:schemaLocation="uri:/mil/tatrc/physiology/datamodel BioGearsDataModel.xsd">
+  <Name>ISS_Cabin</Name>
+  <SurroundingType>Air</SurroundingType>
+  <AirVelocity         readOnly="false" unit="m/s"   value="0.076"/>
+  <AmbientTemperature  readOnly="false" unit="degC"  value="22.0"/>
+  <AtmosphericPressure readOnly="false" unit="mmHg"  value="760"/>
+  <ClothingResistance  readOnly="false" unit="clo"   value="0.5"/>
+  <Emissivity          readOnly="false"              value="0.9"/>
+  <MeanRadiantTemperature readOnly="false" unit="degC" value="22.0"/>
+  <RelativeHumidity    readOnly="false" unit=""      value="0.55"/>
+  <RespirationAmbientTemperature readOnly="false" unit="degC" value="22.0"/>
+  <AmbientGas Name="Nitrogen">
+    <FractionAmount readOnly="false" value="0.7872"/>
+  </AmbientGas>
+  <AmbientGas Name="Oxygen">
+    <FractionAmount readOnly="false" value="0.209"/>
+  </AmbientGas>
+  <AmbientGas Name="CarbonDioxide">
+    <FractionAmount readOnly="false" value="0.0038"/>
+  </AmbientGas>
+</EnvironmentalConditions>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Microgravity_Return (Re-entry / Landing Simulation)
+  Simulates an astronaut returning to Earth gravity after prolonged spaceflight:
+    1. Start in ISS conditions with low background stress (chronic microgravity state)
+    2. Restore standard 1-g environment (landing, pressure equalisation)
+    3. Apply moderate AcuteStress (0.35) — models orthostatic intolerance:
+       blood pools in lower extremities, cardiac preload drops, MAP may fall
+    4. 10 min observation — risk window for syncope (MAP may drop <60 mmHg)
+    5. Moderate stress reduction to 0.15 — cardiovascular compensation begins
+    6. 15 min recovery observation
+  Clinical correlates: orthostatic hypotension, reflex tachycardia, presyncope.
+  Countermeasure: saline loading (see FluidTherapy/SalineInfusion.xml) can be
+  applied concurrently to mitigate the MAP drop.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Microgravity_Return</Name>
+  <Description>Astronaut returns to Earth gravity after spaceflight. Models orthostatic intolerance: blood pools caudally, cardiac preload drops, MAP may fall acutely.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume"        Unit="mL"     Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg"  Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure"    Unit="mmHg"   Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation"         Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystemicVascularResistance" Unit="mmHg s/mL" Precision="3"/>
+    <DataRequest xsi:type="SubstanceDataRequestData"  Substance="Epinephrine" Name="BloodConcentration" Unit="ug/L" Precision="6"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Start in microgravity state: ISS environment + chronic low stress -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.1"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="2" unit="min"/></Action>
+
+    <!-- Landing: restore standard environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/StandardEnvironment.xml</ConditionsFile>
+    </Action>
+
+    <!-- Orthostatic intolerance: caudal blood pooling, preload drop -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.35"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Baroreflex and sympathetic compensation kicks in -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.15"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+  </Actions>
+</Scenario>

@@ -1,4 +1,28 @@
+# Build outputs
 build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+
+# Binary outputs
+*.o
+*.a
+*.so
+*.so.*
+*.out
+
+# Logs and crash artifacts
 *.log
 *.core
 core
+
+# Local environments and editor artifacts
+.venv/
+.claude/
+.vscode/
+
+# OS noise
+.DS_Store
+Thumbs.db

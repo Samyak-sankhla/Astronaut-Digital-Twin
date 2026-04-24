@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Mars_Gravity_Transition
+  Purpose: Transition from microgravity to Martian partial gravity (~0.38 g).
+
+  BioGears note:
+  BioGears does not currently expose direct gravity-level control in scenario actions.
+  This scenario approximates gravitational cardiovascular loading by:
+    1) Moving from ISS cabin to a Mars habitat atmosphere.
+    2) Applying stronger AcuteStress than lunar case to represent greater
+       venous pooling and autonomic demand at 0.38 g.
+
+  Expected physiology:
+    - HR rise and SV reduction greater than lunar transition.
+    - MAP drop risk less severe than full Earth re-entry but more than lunar.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>Mars_Gravity_Transition</Name>
+  <Description>Transition from microgravity to Martian partial gravity in a pressurized Mars habitat; models moderate cardiovascular reloading and adaptation.</Description>
+  <InitialParameters>
+    <PatientFile>StandardMale.xml</PatientFile>
+  </InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SystolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="DiastolicArterialPressure" Unit="mmHg" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput" Unit="L/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartStrokeVolume" Unit="mL" Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CentralVenousPressure" Unit="mmHg" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume" Unit="L" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate" Unit="1/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation" Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="EnvironmentDataRequestData" Name="AtmosphericPressure" Unit="mmHg" Precision="1"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- Establish microgravity baseline -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.10"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Enter Mars habitat and re-load to Martian gravity equivalent -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/Mars_Habitat.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AcuteStressData"><Severity value="0.24"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="15" unit="min"/></Action>
+
+    <!-- Early adaptation plateau -->
+    <Action xsi:type="AcuteStressData"><Severity value="0.16"/></Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="20" unit="min"/></Action>
+  </Actions>
+</Scenario>

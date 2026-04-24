@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CEVIS Cycling (Cycle Ergometer with Vibration Isolation and Stabilization)
+  The CEVIS is the ISS cycle ergometer. Astronauts perform aerobic exercise
+  sessions 6 days per week, 30–60 min per session.
+
+  Protocol modelled (NASA prescription — moderate-intensity continuous):
+    ISS environment throughout
+    Warm-up:   5 min @ 50 W, 60 rpm
+    Main set:  30 min progressive:
+                 10 min @ 100 W, 70 rpm  (~55% VO2max for fit male)
+                 10 min @ 150 W, 80 rpm  (~70% VO2max)
+                 10 min @ 120 W, 75 rpm  (~65% VO2max, sustained)
+    Cool-down: 5 min @ 50 W, 60 rpm
+
+  Total session: ~40 min active + 5 min recovery observation.
+-->
+<Scenario xmlns="uri:/mil/tatrc/physiology/datamodel"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          contentVersion="BioGears_6.3.0-beta"
+          xsi:schemaLocation="">
+  <Name>CEVIS_Cycling</Name>
+  <Description>CEVIS aerobic cycling session on ISS. Progressive 30-min main set (100–150 W) with warm-up and cool-down. Performed in ISS cabin environment.</Description>
+  <InitialParameters><PatientFile>StandardMale.xml</PatientFile></InitialParameters>
+
+  <DataRequests SamplesPerSecond="50">
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="HeartRate"               Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="BloodVolume"              Unit="L"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MeanArterialPressure"     Unit="mmHg"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CardiacOutput"            Unit="L/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="RespirationRate"          Unit="1/min"  Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenConsumptionRate"    Unit="mL/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="OxygenSaturation"         Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="TotalMetabolicRate"       Unit="W"      Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="AchievedExerciseLevel"    Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="FatigueLevel"             Unit="unitless" Precision="3"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="CoreTemperature"          Unit="degC"   Precision="1"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="SweatRate"                Unit="mg/min" Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="MuscleGlycogen"           Unit="g"      Precision="2"/>
+    <DataRequest xsi:type="PhysiologyDataRequestData" Name="LactateProductionRate"    Unit="mol/day" Precision="2"/>
+  </DataRequests>
+
+  <Actions>
+    <!-- ISS cabin environment -->
+    <Action xsi:type="EnvironmentChangeData">
+      <ConditionsFile>environments/ISS_Cabin.xml</ConditionsFile>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="1" unit="min"/></Action>
+
+    <!-- Warm-up: 50 W, 60 rpm -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="60" unit="1/min"/>
+        <Power   value="50" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Main set: 100 W, 70 rpm (~55% VO2max) -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="70" unit="1/min"/>
+        <Power   value="100" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Peak: 150 W, 80 rpm (~70% VO2max) -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="80" unit="1/min"/>
+        <Power   value="150" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Sustained moderate: 120 W, 75 rpm -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="75" unit="1/min"/>
+        <Power   value="120" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="10" unit="min"/></Action>
+
+    <!-- Cool-down: 50 W -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="60" unit="1/min"/>
+        <Power   value="50" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+
+    <!-- Stop + recovery -->
+    <Action xsi:type="ExerciseData">
+      <CyclingExercise>
+        <Cadence value="0" unit="1/min"/>
+        <Power   value="0" unit="W"/>
+      </CyclingExercise>
+    </Action>
+    <Action xsi:type="AdvanceTimeData"><Time value="5" unit="min"/></Action>
+  </Actions>
+</Scenario>
