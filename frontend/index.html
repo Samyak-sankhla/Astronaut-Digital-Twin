@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BioGears Digital Twin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<style>
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root {
+  --bg:          #f4f5f7;
+  --surface:     #ffffff;
+  --border:      #e2e4e9;
+  --border-soft: #f0f1f4;
+  --text-1:      #111827;
+  --text-2:      #4b5563;
+  --text-3:      #9ca3af;
+  --blue:        #2563eb;
+  --blue-bg:     #eff6ff;
+  --green:       #16a34a;
+  --green-bg:    #f0fdf4;
+  --amber:       #d97706;
+  --amber-bg:    #fffbeb;
+  --red:         #dc2626;
+  --red-bg:      #fef2f2;
+  --radius:      8px;
+  --sidebar-w:   304px;
+  --header-h:    52px;
+  --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text-1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+#header {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 20px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+  z-index: 10;
+}
+#header h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -.01em;
+}
+.header-spacer { flex: 1; }
+
+.header-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.header-pill strong { color: var(--text-1); }
+
+#conn-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+  flex-shrink: 0;
+  transition: background .3s;
+}
+#conn-dot.live   { background: var(--green); }
+#conn-dot.error  { background: var(--red); }
+
+#active-action {
+  font-size: 12px;
+  color: var(--blue);
+  font-weight: 500;
+  display: none;
+}
+
+.action-pill {
+  display: none;
+  min-width: 230px;
+  gap: 8px;
+}
+.action-pill.show { display: flex; }
+#ap-label {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ap-bar {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #dbe3f5;
+  overflow: hidden;
+}
+#ap-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  border-radius: 999px;
+  transition: width .15s linear;
+}
+#ap-time {
+  min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+#body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.tab-btn:hover { color: var(--text-1); }
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.tab-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tab-panel[hidden] { display: none; }
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+/* ── Form controls ───────────────────────────────────────────────────────── */
+.field { margin-bottom: 8px; }
+.field:last-of-type { margin-bottom: 10px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 3px;
+}
+.field input[type="number"],
+.field input[type="text"],
+.field select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--text-1);
+  background: var(--bg);
+  outline: none;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus { border-color: var(--blue); background: #fff; }
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.range-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--blue);
+}
+.range-val {
+  font-size: 12px;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+  min-width: 30px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.btn {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn:hover { opacity: .88; }
+
+.btn-primary   { background: var(--blue);  color: #fff; }
+.btn-danger    { background: var(--red);   color: #fff; }
+.btn-secondary { background: var(--bg);    color: var(--text-1); border: 1px solid var(--border); }
+.btn-full      { width: 100%; }
+
+/* ── Toggle ──────────────────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+.toggle-label { font-size: 13px; color: var(--text-1); }
+.toggle {
+  position: relative;
+  width: 40px; height: 22px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--border);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  top: 3px; left: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle input:checked + .toggle-track { background: var(--blue); }
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+/* ── Scenarios tab ───────────────────────────────────────────────────────── */
+.sc-status {
+  background: var(--blue-bg);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  padding: 12px;
+  display: none;
+}
+.sc-status.active { display: block; }
+.sc-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.sc-status-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+}
+.sc-status-cat {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+.sc-progress-bg {
+  height: 5px;
+  background: #bfdbfe;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.sc-progress-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 3px;
+  transition: width .5s;
+  width: 0%;
+}
+.sc-progress-label {
+  font-size: 11px;
+  color: var(--text-2);
+  display: flex;
+  justify-content: space-between;
+}
+
+.sc-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  margin-top: 4px;
+}
+
+.sc-btn {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  margin-bottom: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  line-height: 1.3;
+}
+.sc-btn:hover { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
+
+/* ── Main content ────────────────────────────────────────────────────────── */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+
+/* ── Vitals grid ─────────────────────────────────────────────────────────── */
+#vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.vital-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--border);
+  transition: border-left-color .3s;
+}
+.vital-card.normal { border-left-color: var(--green); }
+.vital-card.warn   { border-left-color: var(--amber); }
+.vital-card.danger { border-left-color: var(--red); }
+
+.vital-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vital-delta {
+  font-size: 11px;
+  font-weight: 600;
+}
+.vital-delta.up   { color: var(--red); }
+.vital-delta.down { color: var(--blue); }
+
+.vital-number {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+  line-height: 1;
+  letter-spacing: -.02em;
+}
+.vital-unit {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+/* ── Charts ──────────────────────────────────────────────────────────────── */
+#charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.chart-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-2);
+}
+.chart-live {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+.chart-unit {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-left: 3px;
+}
+.chart-canvas-wrap { height: 100px; position: relative; }
+.chart-canvas-wrap canvas { position: absolute; inset: 0; }
+
+/* ── Toasts ──────────────────────────────────────────────────────────────── */
+#toast-root {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  pointer-events: none;
+}
+.toast {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  max-width: 320px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: #fff; border: 1px solid #bbf7d0; color: var(--green); }
+.toast.error   { background: #fff; border: 1px solid #fecaca; color: var(--red); }
+.toast.info    { background: #fff; border: 1px solid #bfdbfe; color: var(--blue); }
+
+/* ── Action summary popup ──────────────────────────────────────────────── */
+#action-summary-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, .45);
+  z-index: 1200;
+  padding: 16px;
+}
+#action-summary-modal.show { display: flex; }
+.asm-card {
+  width: min(760px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.22);
+  padding: 16px;
+}
+.asm-title { font-size: 16px; font-weight: 700; color: var(--text-1); margin-bottom: 4px; }
+.asm-subtitle { font-size: 12px; color: var(--text-2); margin-bottom: 12px; }
+.asm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.asm-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: var(--bg); }
+.asm-k { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; }
+.asm-v { margin-top: 5px; font-size: 14px; font-weight: 700; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.asm-d { margin-top: 2px; font-size: 11px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.asm-actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+
+/* Locks controls while action is running */
+.actions-locked #sidebar button,
+.actions-locked #sidebar input,
+.actions-locked #sidebar select,
+.actions-locked #main button,
+.actions-locked #main input,
+.actions-locked #main select {
+  pointer-events: none;
+}
+
+.actions-locked #sidebar [data-allow-while-locked="1"],
+.actions-locked #main [data-allow-while-locked="1"] {
+  pointer-events: auto;
+}
+
+/* ── Recommendation items ───────────────────────────────────────────────── */
+.rec-item {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border-left: 4px solid var(--green);
+  background: var(--surface);
+}
+.rec-item:last-child { margin-bottom: 0; }
+.rec-item.danger { border-left-color: var(--red); background: var(--red-bg); }
+.rec-item.warn   { border-left-color: var(--amber); background: var(--amber-bg); }
+.rec-item.info   { border-left-color: var(--blue); background: var(--blue-bg); }
+.rec-item .rec-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.rec-item.danger .rec-title { color: var(--red); }
+.rec-item.warn .rec-title   { color: var(--amber); }
+.rec-item.info .rec-title   { color: var(--blue); }
+.rec-item .rec-body {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+/* ── Activity log ───────────────────────────────────────────────────────── */
+#activity-log {
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  color: var(--text-2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+#activity-log .log-entry {
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+#activity-log .log-time { color: var(--text-3); }
+#activity-log .log-ok   { color: var(--green); font-weight: 600; }
+#activity-log .log-fail { color: var(--red); font-weight: 600; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────────────────── -->
+<header id="header">
+  <h1>BioGears Digital Twin</h1>
+  <span id="active-action"></span>
+  <div class="header-spacer"></div>
+  <div class="header-pill">
+    <span id="conn-dot"></span>
+    <span id="conn-label">Connecting</span>
+  </div>
+  <div class="header-pill">
+    Sim time <strong id="hdr-time">—</strong> s
+  </div>
+  <div class="header-pill">
+    HR <strong id="hdr-hr">—</strong> bpm
+  </div>
+  <div class="header-pill action-pill" id="action-pill">
+    <span id="ap-label">Action</span>
+    <div class="ap-bar"><div id="ap-fill"></div></div>
+    <span id="ap-time">0%</span>
+  </div>
+</header>
+
+<!-- ── Body ──────────────────────────────────────────────────────────────── -->
+<div id="body">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-controls" onclick="switchTab('controls')">Controls</button>
+      <button class="tab-btn"        id="tab-scenarios" onclick="switchTab('scenarios')">Scenarios</button>
+      <button class="tab-btn"        id="tab-log" onclick="switchTab('log')">Log</button>
+    </div>
+
+    <!-- Controls panel -->
+    <div class="tab-panel" id="panel-controls">
+
+      <!-- Exercise -->
+      <div class="card">
+        <div class="card-title">Exercise</div>
+        <div class="field">
+          <label>Intensity</label>
+          <div class="range-row">
+            <input type="range" id="ex-intensity" min="0" max="1" step="0.01" value="0.5"
+              oninput="document.getElementById('ex-int-val').textContent = parseFloat(this.value).toFixed(2)">
+            <span class="range-val" id="ex-int-val">0.50</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Duration (s) — 0 = continuous</label>
+          <input type="number" id="ex-duration" value="30" min="0" />
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="doExercise()">Start</button>
+          <button class="btn btn-danger" data-allow-while-locked="1" onclick="doStopExercise()">Stop</button>
+        </div>
+      </div>
+
+      <!-- Hydration -->
+      <div class="card">
+        <div class="card-title">Hydration</div>
+        <div class="field">
+          <label>Water (L)</label>
+          <input type="number" id="hy-water" value="0.5" min="0.05" max="2" step="0.05" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doHydration()">Drink</button>
+      </div>
+
+      <!-- Nutrition -->
+      <div class="card">
+        <div class="card-title">Nutrition</div>
+        <div class="field"><label>Carbs (g)</label><input type="number" id="nu-carbs"   value="50"  min="0" /></div>
+        <div class="field"><label>Protein (g)</label><input type="number" id="nu-protein" value="30" min="0" /></div>
+        <div class="field"><label>Fat (g)</label><input type="number" id="nu-fat"     value="15"  min="0" /></div>
+        <div class="field"><label>Water (L)</label><input type="number" id="nu-water"   value="0.2" min="0" step="0.05" /></div>
+        <button class="btn btn-primary btn-full" onclick="doNutrition()">Consume Meal</button>
+      </div>
+
+      <!-- Drug Infusion -->
+      <div class="card">
+        <div class="card-title">Drug Infusion</div>
+        <div class="field"><label>Substance</label><select id="dr-substance"></select></div>
+        <div class="field"><label>Concentration (mg/mL)</label><input type="number" id="dr-conc" value="0.01" min="0" step="0.001" /></div>
+        <div class="field"><label>Rate (mL/min)</label><input type="number" id="dr-rate" value="2" min="0" /></div>
+        <div class="field"><label>Duration (s) — 0 = continuous</label><input type="number" id="dr-duration" value="120" min="0" /></div>
+        <button class="btn btn-primary btn-full" onclick="doDrug()">Infuse</button>
+      </div>
+
+      <!-- Fluid Therapy -->
+      <div class="card">
+        <div class="card-title">IV Fluid Therapy</div>
+        <div class="field"><label>Fluid (Compound)</label><select id="fl-fluid"></select></div>
+        <div class="field"><label>Bag Volume (mL)</label><input type="number" id="fl-bag" value="500" min="0" /></div>
+        <div class="field"><label>Rate (mL/min)</label><input type="number" id="fl-rate"  value="100" min="0" /></div>
+        <button class="btn btn-primary btn-full" onclick="doFluid()">Infuse IV</button>
+      </div>
+
+      <!-- Stress -->
+      <div class="card">
+        <div class="card-title">Acute Stress</div>
+        <div class="field">
+          <label>Severity</label>
+          <div class="range-row">
+            <input type="range" id="st-severity" min="0" max="1" step="0.01" value="0.3"
+              oninput="document.getElementById('st-sev-val').textContent = parseFloat(this.value).toFixed(2)">
+            <span class="range-val" id="st-sev-val">0.30</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="doStress()">Apply Stress</button>
+      </div>
+
+      <!-- Microgravity -->
+      <div class="card">
+        <div class="card-title">Environment</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Microgravity (ISS)</span>
+          <label class="toggle">
+            <input type="checkbox" id="mg-toggle" onchange="doMicrogravity()" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /panel-controls -->
+
+    <!-- Scenarios panel -->
+    <div class="tab-panel" id="panel-scenarios" hidden>
+
+      <!-- Active scenario status -->
+      <div class="sc-status" id="sc-status-box">
+        <div class="sc-status-header">
+          <div>
+            <div class="sc-status-name" id="sc-status-name">—</div>
+            <div class="sc-status-cat"  id="sc-status-cat">—</div>
+          </div>
+            <button class="btn btn-danger" data-allow-while-locked="1" style="flex:none;padding:5px 10px;font-size:11px;"
+                  onclick="doStopScenario()">Stop</button>
+        </div>
+        <div class="sc-progress-bg">
+          <div class="sc-progress-fill" id="sc-progress-fill"></div>
+        </div>
+        <div class="sc-progress-label">
+          <span id="sc-progress-steps">0 / 0 actions</span>
+          <span id="sc-progress-time">0 s sim</span>
+        </div>
+      </div>
+
+      <!-- Dynamic scenarios list -->
+      <div class="sc-group-label">Available Scenarios</div>
+      <div class="field">
+        <select id="sc-dropdown" onchange="updateScenarioDesc()"></select>
+      </div>
+      <div id="sc-desc" style="font-size: 11px; color: var(--text-3); margin-bottom: 12px; min-height: 20px;"></div>
+      
+      <button class="sc-btn" id="btn-run-scenario" onclick="doRunSelectedScenario()" style="border-color: var(--blue); color: var(--blue);">
+        Execute Selected Scenario
+      </button>
+
+    </div><!-- /panel-scenarios -->
+
+    <!-- Activity Log panel -->
+    <div class="tab-panel" id="panel-log" hidden>
+      <div class="sc-group-label">Activity Log</div>
+      <div id="activity-log">
+        <div class="log-entry"><span class="log-time">Waiting for events...</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Active Event Tracker -->
+    <section id="event-tracker-section" style="display: none;">
+      <div class="section-title">Active Event Tracker</div>
+      <div class="card" style="margin-bottom: 0; border-left: 4px solid var(--blue);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <h3 id="et-name" style="font-size: 14px; font-weight: 700; color: var(--blue);">Event Name</h3>
+            <div id="et-timer" style="font-size: 12px; color: var(--text-2); margin-top: 4px;">Duration: 0s</div>
+          </div>
+          <button class="btn btn-secondary" onclick="stopEventTracker()" style="padding: 5px 10px; font-size: 11px; flex: none;">Clear Tracker</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);" id="et-effects">
+        </div>
+        <!-- Clinical Insight Box -->
+        <div id="et-insight" style="display: none; margin-top: 15px; padding: 12px; border-radius: 6px; font-size: 13px; gap: 10px; align-items: flex-start; border: 1px solid var(--border);">
+          <div style="font-size: 16px; margin-top: -2px;">ℹ️</div>
+          <div>
+            <div id="et-insight-title" style="font-weight: 700; margin-bottom: 4px;"></div>
+            <div id="et-insight-msg" style="color: var(--text-2); line-height: 1.4;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommendation System -->
+    <section id="recommendation-section">
+      <div class="section-title">Health Recommendations</div>
+      <div id="rec-container">
+        <div class="rec-item">
+          <div class="rec-title" style="color: var(--green);">✓ All Vitals Stable</div>
+          <div class="rec-body">Patient vitals are within normal physiological limits. No interventions required.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vitals -->
+    <section>
+      <div class="section-title">Live Vitals</div>
+      <div id="vitals-grid">
+        <div class="vital-card" id="vc-hr">
+          <div class="vital-label">Heart Rate <span class="vital-delta" id="d-hr"></span></div>
+          <div class="vital-number" id="v-hr">—</div>
+          <div class="vital-unit">bpm</div>
+        </div>
+        <div class="vital-card" id="vc-sys">
+          <div class="vital-label">Systolic <span class="vital-delta" id="d-sys"></span></div>
+          <div class="vital-number" id="v-sys">—</div>
+          <div class="vital-unit">mmHg</div>
+        </div>
+        <div class="vital-card" id="vc-dia">
+          <div class="vital-label">Diastolic <span class="vital-delta" id="d-dia"></span></div>
+          <div class="vital-number" id="v-dia">—</div>
+          <div class="vital-unit">mmHg</div>
+        </div>
+        <div class="vital-card" id="vc-map">
+          <div class="vital-label">MAP <span class="vital-delta" id="d-map"></span></div>
+          <div class="vital-number" id="v-map">—</div>
+          <div class="vital-unit">mmHg</div>
+        </div>
+        <div class="vital-card" id="vc-co">
+          <div class="vital-label">Cardiac Output <span class="vital-delta" id="d-co"></span></div>
+          <div class="vital-number" id="v-co">—</div>
+          <div class="vital-unit">L/min</div>
+        </div>
+        <div class="vital-card" id="vc-bv">
+          <div class="vital-label">Blood Volume <span class="vital-delta" id="d-bv"></span></div>
+          <div class="vital-number" id="v-bv">—</div>
+          <div class="vital-unit">L</div>
+        </div>
+        <div class="vital-card" id="vc-rr">
+          <div class="vital-label">Respiration <span class="vital-delta" id="d-rr"></span></div>
+          <div class="vital-number" id="v-rr">—</div>
+          <div class="vital-unit">bpm</div>
+        </div>
+        <div class="vital-card" id="vc-st">
+          <div class="vital-label">Sim Time</div>
+          <div class="vital-number" id="v-st">—</div>
+          <div class="vital-unit">seconds</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section>
+      <div class="section-title">60-Second History</div>
+      <div id="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-name">Heart Rate</span>
+            <span><span class="chart-live" id="cl-hr">—</span><span class="chart-unit">bpm</span></span>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart-hr"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-name">Mean Arterial Pressure</span>
+            <span><span class="chart-live" id="cl-map">—</span><span class="chart-unit">mmHg</span></span>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart-map"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-name">Respiration Rate</span>
+            <span><span class="chart-live" id="cl-rr">—</span><span class="chart-unit">bpm</span></span>
+          </div>
+          <div class="chart-canvas-wrap"><canvas id="chart-rr"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Action summary popup -->
+<div id="action-summary-modal">
+  <div class="asm-card" role="dialog" aria-modal="true" aria-labelledby="asm-title">
+    <div class="asm-title" id="asm-title">Action Summary</div>
+    <div class="asm-subtitle" id="asm-subtitle">Vitals change report.</div>
+    <div class="chart-canvas-wrap" style="height: 180px;"><canvas id="asm-chart"></canvas></div>
+    <div class="asm-grid" id="asm-grid"></div>
+    <div class="asm-actions">
+      <button class="btn btn-primary" id="asm-close" onclick="closeActionSummary()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-root"></div>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Config
+// ─────────────────────────────────────────────────────────────────────────────
+const API        = 'http://localhost:8080';
+const POLL_MS    = 500;
+const MAX_PTS    = 120;   // 60 s at 500 ms
+const ACTION_MIN_MS = 2000;
+
+const ACTION_FIELDS = [
+  { key: 'heart_rate', label: 'Heart Rate', unit: 'bpm', d: 1 },
+  { key: 'systolic_pressure', label: 'Systolic', unit: 'mmHg', d: 1 },
+  { key: 'diastolic_pressure', label: 'Diastolic', unit: 'mmHg', d: 1 },
+  { key: 'map', label: 'MAP', unit: 'mmHg', d: 1 },
+  { key: 'cardiac_output', label: 'Cardiac Output', unit: 'L/min', d: 2 },
+  { key: 'blood_volume', label: 'Blood Volume', unit: 'L', d: 2 },
+  { key: 'respiration_rate', label: 'Respiration', unit: 'bpm', d: 1 },
+];
+
+const actionFlow = {
+  active: false,
+  kind: '',
+  label: '',
+  baseline: null,
+  scenarioName: '',
+  timer: null,
+};
+
+let actionSummaryChart = null;
+
+function lockActionControls(lock) {
+  document.body.classList.toggle('actions-locked', lock);
+  const controls = document.querySelectorAll('#sidebar button, #sidebar input, #sidebar select, #main button, #main input, #main select');
+  controls.forEach(el => {
+    if (el.dataset.prevDisabled === undefined) {
+      el.dataset.prevDisabled = el.disabled ? '1' : '0';
+    }
+
+    if (lock) {
+      const allowWhileLocked = el.dataset.allowWhileLocked === '1';
+      el.disabled = !allowWhileLocked;
+      if (allowWhileLocked) {
+        el.removeAttribute('disabled');
+      }
+    } else {
+      el.disabled = el.dataset.prevDisabled === '1';
+      delete el.dataset.prevDisabled;
+    }
+  });
+}
+
+function showActionProgress(label, pct, meta) {
+  const pill = document.getElementById('action-pill');
+  document.getElementById('ap-label').textContent = label;
+  document.getElementById('ap-fill').style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  document.getElementById('ap-time').textContent = meta;
+  pill.classList.add('show');
+}
+
+function hideActionProgress() {
+  const pill = document.getElementById('action-pill');
+  pill.classList.remove('show');
+  document.getElementById('ap-fill').style.width = '0%';
+  document.getElementById('ap-time').textContent = '0%';
+}
+
+async function fetchStateSnapshot() {
+  try {
+    const r = await fetch(API + '/state');
+    if (!r.ok) return history.length ? history[history.length - 1] : null;
+    return await r.json();
+  } catch {
+    return history.length ? history[history.length - 1] : null;
+  }
+}
+
+function fmtDelta(v, d) {
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${v.toFixed(d)}`;
+}
+
+function openActionSummary(title, subtitle, before, after) {
+  if (actionFlow.timer) {
+    clearInterval(actionFlow.timer);
+    actionFlow.timer = null;
+  }
+  hideActionProgress();
+  actionFlow.kind = 'summary';
+
+  const modal = document.getElementById('action-summary-modal');
+  const grid = document.getElementById('asm-grid');
+  document.getElementById('asm-title').textContent = title;
+  document.getElementById('asm-subtitle').textContent = subtitle;
+
+  const labels = [];
+  const deltas = [];
+  grid.innerHTML = ACTION_FIELDS.map(f => {
+    const b = before?.[f.key] ?? 0;
+    const a = after?.[f.key] ?? 0;
+    const dlt = a - b;
+    labels.push(f.label);
+    deltas.push(parseFloat(dlt.toFixed(f.d)));
+    return `
+      <div class="asm-item">
+        <div class="asm-k">${f.label}</div>
+        <div class="asm-v">${a.toFixed(f.d)} ${f.unit}</div>
+        <div class="asm-d">Δ ${fmtDelta(dlt, f.d)} ${f.unit}</div>
+      </div>
+    `;
+  }).join('');
+
+  const ctx = document.getElementById('asm-chart').getContext('2d');
+  if (actionSummaryChart) actionSummaryChart.destroy();
+  actionSummaryChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Delta',
+        data: deltas,
+        backgroundColor: deltas.map(v => v >= 0 ? 'rgba(37,99,235,0.75)' : 'rgba(220,38,38,0.75)'),
+        borderColor: deltas.map(v => v >= 0 ? '#2563eb' : '#dc2626'),
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { color: '#eef0f3' } }
+      }
+    }
+  });
+
+  modal.classList.add('show');
+}
+
+function closeActionSummary() {
+  document.getElementById('action-summary-modal').classList.remove('show');
+  actionFlow.active = false;
+  actionFlow.kind = '';
+  actionFlow.label = '';
+  actionFlow.baseline = null;
+  actionFlow.scenarioName = '';
+  if (actionFlow.timer) {
+    clearInterval(actionFlow.timer);
+    actionFlow.timer = null;
+  }
+  hideActionProgress();
+  lockActionControls(false);
+}
+
+function actionDurationMs(secondsGuess) {
+  const s = Math.max(0, secondsGuess || 0);
+  return Math.max(ACTION_MIN_MS, s * 1000);
+}
+
+async function runLockedAction(path, body, label, secondsGuess = 4) {
+  if (actionFlow.active) {
+    toast('Wait for the current action to complete', 'info');
+    return false;
+  }
+
+  actionFlow.active = true;
+  actionFlow.kind = 'event';
+  actionFlow.label = label;
+  lockActionControls(true);
+
+  actionFlow.baseline = await fetchStateSnapshot();
+  const ok = await post(path, body, label);
+  if (!ok) {
+    closeActionSummary();
+    return false;
+  }
+
+  const totalMs = actionDurationMs(secondsGuess);
+  const start = Date.now();
+  showActionProgress(label, 0, '0%');
+
+  actionFlow.timer = setInterval(async () => {
+    const elapsed = Date.now() - start;
+    const p = Math.min(1, elapsed / totalMs);
+    showActionProgress(label, p * 100, `${Math.round(p * 100)}%`);
+    if (p >= 1) {
+      clearInterval(actionFlow.timer);
+      actionFlow.timer = null;
+      const after = await fetchStateSnapshot();
+      openActionSummary(`${label} complete`, 'Vital changes after this action', actionFlow.baseline || after, after || actionFlow.baseline);
+    }
+  }, 120);
+
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Charts
+// ─────────────────────────────────────────────────────────────────────────────
+function makeChart(canvasId, color) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels:   new Array(MAX_PTS).fill(''),
+      datasets: [{
+        data:        new Array(MAX_PTS).fill(null),
+        borderColor: color,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension:     0.3,
+        fill:        false,
+      }]
+    },
+    options: {
+      animation:          false,
+      responsive:         true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          grid:  { color: '#f0f1f4', drawBorder: false },
+          ticks: { color: '#9ca3af', font: { size: 10 }, maxTicksLimit: 4 },
+        }
+      }
+    }
+  });
+}
+
+const charts = {
+  hr:  makeChart('chart-hr',  '#2563eb'),
+  map: makeChart('chart-map', '#7c3aed'),
+  rr:  makeChart('chart-rr',  '#059669'),
+};
+
+function pushChart(chart, value) {
+  const ds = chart.data.datasets[0].data;
+  ds.push(value);
+  if (ds.length > MAX_PTS) ds.shift();
+  chart.update('none');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vitals
+// ─────────────────────────────────────────────────────────────────────────────
+const history = [];       // ring buffer of last 6 readings for delta arrows
+const trendBuffer = [];   // longer buffer of last 20 readings for trend analysis
+
+const THRESHOLDS = {
+  hr:  [45, 60, 100, 120],
+  sys: [90, 100, 140, 160],
+  dia: [50, 60,  90, 100],
+  map: [60, 70, 110, 130],
+  co:  [ 2,  3,   8,  10],
+  bv:  [ 3,  4,   7,   8],
+  rr:  [ 8, 12,  20,  30],
+};
+
+function statusClass(val, [critLow, warnLow, warnHigh, critHigh]) {
+  if (val <= critLow || val >= critHigh) return 'danger';
+  if (val <= warnLow || val >= warnHigh) return 'warn';
+  return 'normal';
+}
+
+function deltaArrow(cur, prev, threshold = 0.3) {
+  if (prev == null) return { text: '', cls: '' };
+  const diff = cur - prev;
+  if (Math.abs(diff) < threshold) return { text: '', cls: '' };
+  return diff > 0 ? { text: '↑', cls: 'up' } : { text: '↓', cls: 'down' };
+}
+
+function setVital(key, cardId, valId, deltaId, value, prevValue, decimals = 1) {
+  const card  = document.getElementById(cardId);
+  const valEl = document.getElementById(valId);
+  const delEl = document.getElementById(deltaId);
+  const d     = deltaArrow(value, prevValue);
+
+  valEl.textContent = value.toFixed(decimals);
+  delEl.textContent = d.text;
+  delEl.className   = 'vital-delta ' + d.cls;
+  card.className    = 'vital-card ' + statusClass(value, THRESHOLDS[key] || [0,0,999,999]);
+}
+
+// Compute trend slope over last N readings
+function computeTrend(buffer, accessor) {
+  if (buffer.length < 5) return 0;
+  const vals = buffer.slice(-10).map(accessor);
+  const n = vals.length;
+  const xMean = (n - 1) / 2;
+  const yMean = vals.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - xMean) * (vals[i] - yMean);
+    den += (i - xMean) * (i - xMean);
+  }
+  return den !== 0 ? num / den : 0;
+}
+
+function applyState(s) {
+  history.push(s);
+  if (history.length > 6) history.shift();
+
+  trendBuffer.push(s);
+  if (trendBuffer.length > 20) trendBuffer.shift();
+
+  const prev = history.length >= 4 ? history[history.length - 4] : null;
+
+  // Header
+  document.getElementById('hdr-time').textContent = s.simulation_time_s.toFixed(1);
+  document.getElementById('hdr-hr').textContent   = s.heart_rate.toFixed(1);
+
+  // Vital cards — using the ACTUAL JSON field names from /state
+  setVital('hr',  'vc-hr',  'v-hr',  'd-hr',  s.heart_rate,           prev?.heart_rate,           1);
+  setVital('sys', 'vc-sys', 'v-sys', 'd-sys', s.systolic_pressure,    prev?.systolic_pressure,    1);
+  setVital('dia', 'vc-dia', 'v-dia', 'd-dia', s.diastolic_pressure,   prev?.diastolic_pressure,   1);
+  setVital('map', 'vc-map', 'v-map', 'd-map', s.map,                  prev?.map,                  1);
+  setVital('co',  'vc-co',  'v-co',  'd-co',  s.cardiac_output,       prev?.cardiac_output,       2);
+  setVital('bv',  'vc-bv',  'v-bv',  'd-bv',  s.blood_volume,         prev?.blood_volume,         2);
+  setVital('rr',  'vc-rr',  'v-rr',  'd-rr',  s.respiration_rate,     prev?.respiration_rate,     1);
+
+  // Sim time card
+  document.getElementById('v-st').textContent = s.simulation_time_s.toFixed(0);
+
+  // Chart live values
+  document.getElementById('cl-hr').textContent  = s.heart_rate.toFixed(1);
+  document.getElementById('cl-map').textContent = s.map.toFixed(1);
+  document.getElementById('cl-rr').textContent  = s.respiration_rate.toFixed(1);
+
+  // Push to charts
+  pushChart(charts.hr,  s.heart_rate);
+  pushChart(charts.map, s.map);
+  pushChart(charts.rr,  s.respiration_rate);
+
+  updateEventTracker(s);
+  evaluateRecommendations(s);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Advanced Recommendation Engine — Multi-condition with trend analysis
+// ─────────────────────────────────────────────────────────────────────────────
+function evaluateRecommendations(s) {
+  const container = document.getElementById('rec-container');
+  const recommendations = [];
+
+  // Compute trends
+  const hrTrend  = computeTrend(trendBuffer, v => v.heart_rate);
+  const mapTrend = computeTrend(trendBuffer, v => v.map);
+  const bvTrend  = computeTrend(trendBuffer, v => v.blood_volume);
+  const rrTrend  = computeTrend(trendBuffer, v => v.respiration_rate);
+
+  // ── CRITICAL conditions ──────────────────────────────────────────────────
+
+  // 1. Cardiovascular collapse: low MAP + low blood volume
+  if (s.map < 65 && s.blood_volume < 4.5) {
+    recommendations.push({
+      level: 'danger',
+      title: '🚨 CRITICAL — Hypovolemic Shock',
+      msg: `MAP is ${s.map.toFixed(1)} mmHg with blood volume at ${s.blood_volume.toFixed(2)} L. The cardiovascular system is failing to perfuse vital organs. IMMEDIATE action: administer IV Saline (500–1000 mL bag at 200+ mL/min) or packed RBCs if hemorrhage is suspected. Stop any active exercise.`
+    });
+  }
+
+  // 2. Severe hypotension without volume loss (vasodilatory/distributive)
+  if (s.map < 65 && s.blood_volume >= 4.5) {
+    recommendations.push({
+      level: 'danger',
+      title: '🚨 CRITICAL — Distributive Shock / Vasodilatory Collapse',
+      msg: `MAP is critically low (${s.map.toFixed(1)} mmHg) despite adequate blood volume (${s.blood_volume.toFixed(2)} L). Likely cause: severe vasodilation from sepsis, anaphylaxis, or drug overdose. Recommend: Vasopressor infusion (Norepinephrine 0.05 mg/mL at 5 mL/min, or Epinephrine).`
+    });
+  }
+
+  // 3. Extreme tachycardia — cardiac arrest risk
+  if (s.heart_rate > 160) {
+    recommendations.push({
+      level: 'danger',
+      title: '🚨 CRITICAL — Extreme Tachycardia (Cardiac Arrest Risk)',
+      msg: `Heart rate at ${s.heart_rate.toFixed(0)} bpm — ventricular filling time is critically short, risking ischemia and arrhythmia. If exercise is active, STOP IT immediately. Consider beta-blocker or vagal maneuver. If MAP is also low, this may be a compensatory reflex for shock.`
+    });
+  }
+
+  // 4. Respiratory depression
+  if (s.respiration_rate < 6) {
+    recommendations.push({
+      level: 'danger',
+      title: '🚨 CRITICAL — Respiratory Depression / Apnea Risk',
+      msg: `Respiration rate at ${s.respiration_rate.toFixed(1)} bpm — hypoxia is imminent. If opioids were administered (Morphine, Fentanyl), immediately infuse Naloxone (0.4 mg/mL at 1 mL/min) as reversal agent. Ensure airway patency. If caused by sedation agents (Propofol, Etomidate), reduce/stop infusion.`
+    });
+  }
+
+  // ── WARNING conditions ───────────────────────────────────────────────────
+
+  // 5. Tachycardia with rising trend
+  if (s.heart_rate > 120 && s.heart_rate <= 160) {
+    let extra = '';
+    if (hrTrend > 1.0) extra = ' HR is still rising — trend analysis shows continued acceleration.';
+    if (activeEvent && activeEvent.name.toLowerCase().includes('exercise')) {
+      extra += ' Active exercise detected — consider reducing intensity or stopping.';
+    }
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Tachycardia — Sustained Elevated Heart Rate',
+      msg: `Heart rate at ${s.heart_rate.toFixed(0)} bpm exceeds safe resting range.${extra} Risk of cardiac fatigue and muscle spasm with prolonged demand. Monitor closely — if it exceeds 160 bpm, immediate intervention is required.`
+    });
+  }
+
+  // 6. Profound bradycardia
+  if (s.heart_rate < 45) {
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Bradycardia — Insufficient Heart Rate',
+      msg: `Heart rate at ${s.heart_rate.toFixed(0)} bpm — organs may not receive adequate perfusion. Possible causes: over-sedation, vagal response, or hypothermia. Recommend: Atropine infusion (0.5 mg IV push equivalent) to increase chronotropic drive.`
+    });
+  }
+
+  // 7. Hypertensive crisis
+  if (s.systolic_pressure > 180 || s.map > 140) {
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Hypertensive Crisis — Stroke/Aneurysm Risk',
+      msg: `Systolic ${s.systolic_pressure.toFixed(0)} / MAP ${s.map.toFixed(0)} mmHg. Severe hypertension increases risk of hemorrhagic stroke and aortic dissection. Stop any acute stress events. Consider an antihypertensive agent if available.`
+    });
+  }
+
+  // 8. MAP falling with blood volume declining — early dehydration warning
+  if (s.map >= 65 && s.map < 75 && bvTrend < -0.005) {
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Developing Hypotension — Blood Volume Declining',
+      msg: `MAP is borderline (${s.map.toFixed(1)} mmHg) with a downward blood volume trend (BV: ${s.blood_volume.toFixed(2)} L). This may indicate ongoing dehydration or occult hemorrhage. Recommend: oral hydration (0.5-1.0 L water) or prophylactic IV Saline.`
+    });
+  }
+
+  // 9. Hyperventilation
+  if (s.respiration_rate > 30) {
+    let cause = 'Possible causes: extreme exertion, metabolic acidosis, panic, or pain.';
+    if (activeEvent && activeEvent.name.toLowerCase().includes('exercise')) {
+      cause = 'Likely exercise-induced ventilatory overshoot — consider reducing intensity.';
+    }
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Hyperventilation / Respiratory Distress',
+      msg: `Respiration rate at ${s.respiration_rate.toFixed(0)} bpm. ${cause} Sustained hyperventilation causes respiratory alkalosis, dizziness, and potential syncope.`
+    });
+  }
+
+  // 10. Low cardiac output
+  if (s.cardiac_output < 3.0) {
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Low Cardiac Output — Inadequate Tissue Perfusion',
+      msg: `Cardiac output at ${s.cardiac_output.toFixed(2)} L/min (normal: 4–8 L/min). Organs are receiving insufficient blood flow. Consider IV fluids to improve preload, or inotropic agents (Dobutamine) to strengthen contractility.`
+    });
+  }
+
+  // 11. Compound danger: exercise + dehydration
+  if (activeEvent && activeEvent.name.toLowerCase().includes('exercise') && s.blood_volume < 4.8 && s.heart_rate > 100) {
+    recommendations.push({
+      level: 'warn',
+      title: '⚠️ Exercise + Dehydration — Heat Exhaustion Risk',
+      msg: `Astronaut is exercising with reduced blood volume (${s.blood_volume.toFixed(2)} L) and elevated HR (${s.heart_rate.toFixed(0)} bpm). This combination risks heat exhaustion, muscle cramping, and syncope. Recommend: stop exercise and rehydrate with 0.5-1.0 L water immediately.`
+    });
+  }
+
+  // ── INFO conditions ──────────────────────────────────────────────────────
+
+  // 12. HR rising trend (early warning before it crosses threshold)
+  if (s.heart_rate > 90 && s.heart_rate <= 120 && hrTrend > 2.0) {
+    recommendations.push({
+      level: 'info',
+      title: 'ℹ️ Heart Rate Accelerating',
+      msg: `HR is currently ${s.heart_rate.toFixed(0)} bpm and rising rapidly. If continued, expect tachycardia within minutes. Consider preemptive action if no intentional stressor is applied.`
+    });
+  }
+
+  // 13. MAP recovering
+  if (s.map >= 65 && s.map < 80 && mapTrend > 0.5) {
+    recommendations.push({
+      level: 'info',
+      title: 'ℹ️ MAP Recovering',
+      msg: `Mean arterial pressure is recovering (${s.map.toFixed(1)} mmHg, trending upward). Baroreflex mechanisms are actively compensating. Continue monitoring.`
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (recommendations.length === 0) {
+    container.innerHTML = `
+      <div class="rec-item">
+        <div class="rec-title" style="color: var(--green);">✓ All Vitals Stable</div>
+        <div class="rec-body">Patient vitals are within normal physiological limits. Cardiovascular, respiratory, and hemodynamic parameters are nominal. No interventions required.</div>
+      </div>`;
+  } else {
+    container.innerHTML = recommendations.map(r => `
+      <div class="rec-item ${r.level}">
+        <div class="rec-title">${r.title}</div>
+        <div class="rec-body">${r.msg}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Polling — state
+// ─────────────────────────────────────────────────────────────────────────────
+let connected = false;
+
+async function pollState() {
+  try {
+    const res = await fetch(API + '/state');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    applyState(data);
+    setConnected(true);
+  } catch {
+    setConnected(false);
+  }
+}
+
+function setConnected(ok) {
+  if (connected === ok) return;
+  connected = ok;
+  const dot   = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-label');
+  dot.className   = ok ? 'live' : 'error';
+  label.textContent = ok ? 'Live' : 'Disconnected';
+}
+
+setInterval(pollState, POLL_MS);
+pollState();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Polling — scenario
+// ─────────────────────────────────────────────────────────────────────────────
+let activeScenarioName = null;
+
+async function pollScenario() {
+  try {
+    const res = await fetch(API + '/scenario/status');
+    if (!res.ok) return;
+    const st = await res.json();
+    updateScenarioUI(st);
+
+    if (actionFlow.active && actionFlow.kind === 'scenario' && st.scenario_name === actionFlow.scenarioName) {
+      if (st.active) {
+        const pct = st.actions_total > 0 ? (st.actions_completed / st.actions_total * 100) : 0;
+        showActionProgress(actionFlow.label, pct, `${st.actions_completed}/${st.actions_total}`);
+      } else {
+        const after = await fetchStateSnapshot();
+        openActionSummary(
+          `${actionFlow.label} complete`,
+          `Scenario summary: ${st.actions_completed}/${st.actions_total} actions, ${st.elapsed_sim_s.toFixed(0)} s sim`,
+          actionFlow.baseline || after,
+          after || actionFlow.baseline
+        );
+      }
+    }
+  } catch {}
+}
+
+function updateScenarioUI(st) {
+  const box       = document.getElementById('sc-status-box');
+  const fillEl    = document.getElementById('sc-progress-fill');
+  const stepsEl   = document.getElementById('sc-progress-steps');
+  const timeEl    = document.getElementById('sc-progress-time');
+  const nameEl    = document.getElementById('sc-status-name');
+  const catEl     = document.getElementById('sc-status-cat');
+  const activeEl  = document.getElementById('active-action');
+
+  if (st.active) {
+    box.classList.add('active');
+    nameEl.textContent = st.scenario_name.replace(/_/g, ' ');
+    catEl.textContent  = st.category;
+    const pct = st.actions_total > 0
+      ? (st.actions_completed / st.actions_total * 100).toFixed(1)
+      : 0;
+    fillEl.style.width     = pct + '%';
+    stepsEl.textContent    = `${st.actions_completed} / ${st.actions_total} actions`;
+    timeEl.textContent     = `${st.elapsed_sim_s.toFixed(0)} s sim`;
+    activeEl.style.display = 'block';
+    activeEl.textContent   = `Running: ${st.scenario_name.replace(/_/g, ' ')}`;
+    activeScenarioName = st.scenario_name;
+  } else {
+    box.classList.remove('active');
+    activeEl.style.display = 'none';
+    activeScenarioName = null;
+  }
+}
+
+setInterval(pollScenario, 800);
+pollScenario();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Toasts — FIXED: class was `toast-${type}` but CSS defines `.toast.success`
+// ─────────────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const root = document.getElementById('toast-root');
+  const el   = document.createElement('div');
+  el.className   = `toast ${type}`;
+  el.textContent = msg;
+  root.appendChild(el);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('show'));
+  });
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 250);
+  }, 3000);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Activity Log (frontend mirror)
+// ─────────────────────────────────────────────────────────────────────────────
+let logInitialized = false;
+
+function addLogEntry(type, detail, success = true) {
+  const logEl = document.getElementById('activity-log');
+  if (!logInitialized) {
+    logEl.innerHTML = '';
+    logInitialized = true;
+  }
+  const now = new Date().toLocaleTimeString();
+  const statusCls = success ? 'log-ok' : 'log-fail';
+  const statusTxt = success ? 'OK' : 'FAIL';
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${now}</span> <span class="${statusCls}">[${statusTxt}]</span> <strong>${type}</strong>: ${detail}`;
+  logEl.appendChild(entry);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event Tracker
+// ─────────────────────────────────────────────────────────────────────────────
+let activeEvent = null;
+
+function startEventTracker(name) {
+  if (!history.length) return;
+  const current = history[history.length - 1];
+  activeEvent = {
+    name: name,
+    startSimTime: current.simulation_time_s,
+    baseline: {
+      hr: current.heart_rate,
+      map: current.map,
+      co: current.cardiac_output,
+      bv: current.blood_volume,
+      rr: current.respiration_rate,
+      sys: current.systolic_pressure,
+      dia: current.diastolic_pressure
+    }
+  };
+  document.getElementById('event-tracker-section').style.display = 'block';
+  document.getElementById('et-name').textContent = name;
+  updateEventTracker(current);
+}
+
+function stopEventTracker() {
+  activeEvent = null;
+  document.getElementById('event-tracker-section').style.display = 'none';
+}
+
+function updateEventTracker(current) {
+  if (!activeEvent) return;
+  const elapsed = current.simulation_time_s - activeEvent.startSimTime;
+  
+  const mins = Math.floor(elapsed / 60);
+  const secs = Math.floor(elapsed % 60);
+  const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  document.getElementById('et-timer').textContent = `Duration: ${timeStr}`;
+
+  const effects = [
+    { key: 'HR', val: current.heart_rate - activeEvent.baseline.hr, unit: 'bpm' },
+    { key: 'MAP', val: current.map - activeEvent.baseline.map, unit: 'mmHg' },
+    { key: 'Blood Vol', val: current.blood_volume - activeEvent.baseline.bv, unit: 'L' },
+    { key: 'Cardiac Out', val: current.cardiac_output - activeEvent.baseline.co, unit: 'L/min' }
+  ];
+
+  const container = document.getElementById('et-effects');
+  container.innerHTML = effects.map(e => {
+    let sign = e.val > 0 ? '+' : '';
+    let color = Math.abs(e.val) > 0.1 ? (e.val > 0 ? 'var(--red)' : 'var(--blue)') : 'var(--text-3)';
+    if (e.key === 'Blood Vol' || e.key === 'Cardiac Out') {
+      color = Math.abs(e.val) > 0.01 ? (e.val > 0 ? 'var(--blue)' : 'var(--red)') : 'var(--text-3)';
+    }
+    return `
+      <div>
+        <div style="font-size: 10px; text-transform: uppercase; color: var(--text-3); font-weight: 700;">${e.key}</div>
+        <div style="font-size: 14px; font-weight: 600; color: ${color};">
+          ${sign}${e.val.toFixed(1)} <span style="font-size: 10px; color: var(--text-3);">${e.unit}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  evaluateClinicalInsights(current, activeEvent.name, elapsed, effects);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Advanced Clinical Inference Engine — drug-aware, multi-system reasoning
+// ─────────────────────────────────────────────────────────────────────────────
+function evaluateClinicalInsights(current, activeEventName, elapsed, effects) {
+  const container = document.getElementById('et-insight');
+  const titleEl = document.getElementById('et-insight-title');
+  const msgEl = document.getElementById('et-insight-msg');
+
+  if (!activeEventName) {
+    container.style.display = 'none';
+    return;
+  }
+
+  let insightTitle = '';
+  let insightMsg = '';
+  let level = 'info';
+
+  const hrDiff = effects.find(e => e.key === 'HR').val;
+  const mapDiff = effects.find(e => e.key === 'MAP').val;
+  const bvDiff = effects.find(e => e.key === 'Blood Vol').val;
+  const name = activeEventName.toLowerCase();
+
+  const isExercise = name.includes('exercise') || name.includes('cevis') || name.includes('ared') || name.includes('colbert') || name.includes('cycling') || name.includes('treadmill');
+  const isHydration = name.includes('hydration') || name.includes('nutrition') || name.includes('iv fluid');
+  const isMicrogravity = name.includes('microgravity') || name.includes('plasma') || name.includes('orthostatic');
+  const isStress = name.includes('stress');
+  const isDrug = name.includes('drug') || name.includes('infusion');
+
+  if (isExercise) {
+    if (current.heart_rate > 140) {
+      insightTitle = 'Anaerobic Threshold Exceeded';
+      insightMsg = `After ${timeStr(elapsed)}, HR is at ${current.heart_rate.toFixed(0)} bpm — the body has exceeded aerobic capacity. Lactate accumulation is accelerating, causing metabolic acidosis. Muscle fibers are switching to anaerobic glycolysis, risking cramping and early fatigue. The respiratory system is compensating with hyperventilation (RR: ${current.respiration_rate.toFixed(0)}).`;
+      level = 'danger';
+    } else if (current.heart_rate > 100 || hrDiff > 15) {
+      const stabilizing = trendBuffer.length >= 8 && Math.abs(computeTrend(trendBuffer, v => v.heart_rate)) < 0.5;
+      insightTitle = stabilizing ? 'Cardiovascular Steady State' : 'Compensatory Tachycardia';
+      insightMsg = stabilizing
+        ? `Heart rate has stabilized at ${current.heart_rate.toFixed(0)} bpm after ${timeStr(elapsed)}. The cardiovascular system has found a balance between oxygen demand and delivery. Peripheral vasodilation in skeletal muscle is compensated by increased cardiac output.`
+        : `Heart rate is actively climbing (${current.heart_rate.toFixed(0)} bpm, Δ${hrDiff > 0 ? '+' : ''}${hrDiff.toFixed(1)}). Skeletal muscle oxygen demand is driving sympathetic activation — vasodilation in working muscles lowers SVR while the heart compensates with rate and contractility.`;
+      level = stabilizing ? 'info' : 'warn';
+    } else {
+      insightTitle = 'Aerobic Exercise Phase';
+      insightMsg = `${timeStr(elapsed)} into exercise. Metabolic rate is increasing with aerobic pathways fully engaged. Cardiac output rises via stroke volume first (Frank-Starling mechanism), then chronotropic drive if demand continues.`;
+      level = 'info';
+    }
+  } else if (isMicrogravity) {
+    if (bvDiff < -0.1) {
+      insightTitle = 'Microgravity-Induced Diuresis';
+      insightMsg = `Blood volume has dropped ${Math.abs(bvDiff).toFixed(2)} L since transition. In microgravity, removal of hydrostatic gradients causes a cephalad fluid shift. Central volume receptors interpret this as hypervolemia, triggering ANP release and suppressing ADH — leading to diuresis and plasma volume contraction. This is the primary mechanism behind post-flight orthostatic intolerance.`;
+      level = 'warn';
+    } else if (mapDiff < -5) {
+      insightTitle = 'Cardiovascular Deconditioning';
+      insightMsg = `MAP has dropped ${Math.abs(mapDiff).toFixed(1)} mmHg. Without gravitational venous pooling, the baroreceptor reflex resets to operate at lower pressures. Vascular smooth muscle begins to atrophy, reducing the body's ability to vasoconstrict upon return to gravity — a key risk for post-landing syncope.`;
+      level = 'warn';
+    } else {
+      insightTitle = 'Headward Fluid Redistribution';
+      insightMsg = `Gravitational unloading is redistributing approximately 1.5-2L of blood from the lower extremities toward the thorax and head. Facial edema and nasal congestion are expected. The cardiovascular system is beginning to adapt to the new hemodynamic environment.`;
+      level = 'info';
+    }
+  } else if (isHydration) {
+    if (bvDiff > 0.05) {
+      insightTitle = 'Effective Volume Expansion';
+      insightMsg = `Blood volume increased by ${bvDiff.toFixed(2)} L. The administered fluid has crossed from the GI tract / IV line into the intravascular compartment, increasing venous return and cardiac preload (Frank-Starling). MAP should stabilize or rise as stroke volume improves. Heart rate may decrease as baroreceptors detect improved perfusion.`;
+      level = 'info';
+    } else {
+      insightTitle = 'Fluid Distribution Phase';
+      insightMsg = `Administered fluid is distributing across body compartments (intravascular → interstitial → intracellular). Oral fluids require 15-30 min for full absorption. IV fluids act faster but only ~25% of crystalloid (Saline) remains intravascular after 1 hour.`;
+      level = 'info';
+    }
+  } else if (isStress) {
+    if (hrDiff > 15 && mapDiff > 5) {
+      insightTitle = 'Full Sympathetic Activation';
+      insightMsg = `The hypothalamic-pituitary-adrenal axis is fully active. Epinephrine and norepinephrine are flooding the system — you see HR +${hrDiff.toFixed(0)} bpm (β1 chronotropic effect) and MAP +${mapDiff.toFixed(0)} mmHg (α1 vasoconstriction). Bronchodilation, pupil dilation, glucose mobilization, and non-essential vasoconstriction (GI, renal) are occurring simultaneously.`;
+      level = 'danger';
+    } else if (hrDiff > 5 || mapDiff > 3) {
+      insightTitle = 'Sympathetic Response Initiated';
+      insightMsg = `Early fight-or-flight response detected. Adrenal chromaffin cells are releasing catecholamines. Expect progressive increases in HR, contractility, respiratory rate, and peripheral vasoconstriction over the next 30-60 seconds.`;
+      level = 'warn';
+    } else {
+      insightTitle = 'Stress Processing';
+      insightMsg = `Acute stressor applied. The amygdala is signaling the hypothalamus to activate the sympathetic nervous system. Hemodynamic changes will follow as catecholamine levels rise.`;
+      level = 'info';
+    }
+  } else if (isDrug) {
+    insightTitle = 'Pharmacological Agent Active';
+    insightMsg = `Drug infusion running for ${timeStr(elapsed)}. HR delta: ${hrDiff > 0 ? '+' : ''}${hrDiff.toFixed(1)} bpm, MAP delta: ${mapDiff > 0 ? '+' : ''}${mapDiff.toFixed(1)} mmHg. Monitor for expected pharmacological effects based on the specific substance administered.`;
+    if (hrDiff > 10 && mapDiff > 5) {
+      insightTitle = 'Vasopressor Response Detected';
+      insightMsg = `The infused agent is producing both chronotropic (HR +${hrDiff.toFixed(0)}) and vasoconstrictive (MAP +${mapDiff.toFixed(0)}) effects — consistent with an adrenergic agonist (e.g., Epinephrine, Norepinephrine). Monitor for excessive hypertension and arrhythmia.`;
+      level = 'warn';
+    } else if (hrDiff < -5) {
+      insightTitle = 'Negative Chronotropic Effect';
+      insightMsg = `Heart rate is decreasing (${hrDiff.toFixed(1)} bpm change). If an opioid or sedative was infused, this may progress to respiratory depression. Monitor RR closely — if it drops below 8 bpm, prepare Naloxone.`;
+      level = 'warn';
+    } else {
+      level = 'info';
+    }
+  } else {
+    // Generic fallback for any tracked event
+    if (current.map < 70) {
+      insightTitle = 'Hypotension Developing';
+      insightMsg = `MAP has fallen to ${current.map.toFixed(1)} mmHg during this event. Baroreceptor reflexes should be compensating with increased HR and vasoconstriction. If compensation fails, end-organ hypoperfusion begins (kidneys, brain first).`;
+      level = 'danger';
+    } else if (current.heart_rate > 110) {
+      insightTitle = 'Elevated Cardiovascular Demand';
+      insightMsg = `HR at ${current.heart_rate.toFixed(0)} bpm during '${activeEventName}'. The heart is working harder than resting baseline — sustained demand increases myocardial O2 consumption and may lead to fatigue in a deconditioned astronaut.`;
+      level = 'warn';
+    } else {
+      insightTitle = 'Event Active — Monitoring';
+      insightMsg = `'${activeEventName}' running for ${timeStr(elapsed)}. All vitals within expected parameters. Continuous monitoring active.`;
+      level = 'info';
+    }
+  }
+
+  container.style.display = 'flex';
+  
+  if (level === 'danger') {
+    container.style.background = 'var(--red-bg)';
+    container.style.borderColor = 'var(--red)';
+  } else if (level === 'warn') {
+    container.style.background = 'var(--amber-bg)';
+    container.style.borderColor = 'var(--amber)';
+  } else {
+    container.style.background = 'var(--blue-bg)';
+    container.style.borderColor = 'var(--blue)';
+  }
+
+  let icon = level === 'danger' ? '🚨' : (level === 'warn' ? '⚠️' : 'ℹ️');
+  const iconEl = container.querySelector('div:first-child');
+  if (iconEl) iconEl.textContent = icon;
+
+  titleEl.textContent = insightTitle;
+  titleEl.style.color = level === 'danger' ? 'var(--red)' : (level === 'warn' ? 'var(--amber)' : 'var(--blue)');
+  msgEl.textContent = insightMsg;
+}
+
+function timeStr(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API helpers
+// ─────────────────────────────────────────────────────────────────────────────
+async function post(path, body, label) {
+  try {
+    const res  = await fetch(API + path, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (res.ok) {
+      toast(label + ' applied', 'success');
+      addLogEntry(label.toUpperCase(), JSON.stringify(body), true);
+      if (label && !label.includes('stopped') && !label.includes('OFF')) {
+        startEventTracker(label);
+      }
+      return true;
+    } else if (res.status === 409) {
+      toast(json.error || 'Conflict', 'info');
+      addLogEntry(label.toUpperCase(), json.error || 'Conflict', false);
+    } else {
+      toast((json.error || 'Error') + ' (' + path + ')', 'error');
+      addLogEntry(label.toUpperCase(), json.error || 'Server error', false);
+    }
+  } catch {
+    toast('Cannot reach server', 'error');
+    addLogEntry(label.toUpperCase(), 'Cannot reach server', false);
+  }
+  return false;
+}
+
+function num(id)     { return parseFloat(document.getElementById(id).value) || 0; }
+function str(id)     { return document.getElementById(id).value.trim(); }
+function int(id)     { return parseInt(document.getElementById(id).value)  || 0; }
+function checked(id) { return document.getElementById(id).checked; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Button handlers
+// ─────────────────────────────────────────────────────────────────────────────
+function doExercise()     { runLockedAction('/event/exercise',      { intensity: num('ex-intensity'), duration: int('ex-duration') }, 'Exercise', int('ex-duration') || 8); }
+async function forceStopActiveAction() {
+  if (actionFlow.active) {
+    showActionProgress(actionFlow.label || 'Current action', 100, 'stopping');
+  }
+
+  const stoppingScenario = actionFlow.kind === 'scenario' || !!activeScenarioName;
+  const stopScenarioOk = stoppingScenario ? await post('/scenario/stop', {}, 'Scenario stopped') : true;
+  const stopExerciseOk = await post('/event/exercise', { intensity: 0, duration: 0 }, 'Exercise stopped');
+
+  stopEventTracker();
+  closeActionSummary();
+  if (stoppingScenario) {
+    pollScenario();
+  }
+
+  if (!stopScenarioOk || !stopExerciseOk) {
+    toast('Stop command partially failed', 'warn');
+  }
+}
+
+function doStopExercise() { forceStopActiveAction(); }
+function doHydration()    { runLockedAction('/event/hydration',     { water_liters: num('hy-water') }, 'Hydration', 4); }
+function doNutrition()    { runLockedAction('/event/nutrition',     { carbs_g: num('nu-carbs'), protein_g: num('nu-protein'), fat_g: num('nu-fat'), water_l: num('nu-water') }, 'Nutrition', 5); }
+function doDrug()         { runLockedAction('/event/drug',          { substance: str('dr-substance'), concentration_mg_per_ml: num('dr-conc'), rate_ml_per_min: num('dr-rate'), duration_s: int('dr-duration') }, 'Drug infusion', int('dr-duration') || 5); }
+function doFluid()        { runLockedAction('/event/fluid_therapy', { fluid: str('fl-fluid'), bag_volume_ml: num('fl-bag'), rate_ml_per_min: num('fl-rate') }, 'IV fluid', 5); }
+function doStress()       { runLockedAction('/event/stress',        { severity: num('st-severity') }, 'Stress', 4); }
+function doMicrogravity() { runLockedAction('/event/microgravity',  { enabled: checked('mg-toggle') }, checked('mg-toggle') ? 'Microgravity ON' : 'Microgravity OFF', 5); }
+
+async function doRunScenario(name) {
+  if (actionFlow.active) {
+    toast('Wait for the current action to complete', 'info');
+    return;
+  }
+
+  if (activeScenarioName) {
+    await fetch(API + '/scenario/stop', { method: 'POST' });
+  }
+  actionFlow.active = true;
+  actionFlow.kind = 'scenario';
+  actionFlow.label = name.replace(/_/g, ' ');
+  actionFlow.scenarioName = name;
+  lockActionControls(true);
+  actionFlow.baseline = await fetchStateSnapshot();
+  showActionProgress(actionFlow.label, 0, 'starting');
+
+  const ok = await post('/scenario/run', { name }, actionFlow.label);
+  if (ok) {
+    switchTab('scenarios');
+    pollScenario();
+  } else {
+    closeActionSummary();
+  }
+}
+
+async function doRunSelectedScenario() {
+  const name = str('sc-dropdown');
+  if (name) doRunScenario(name);
+}
+
+async function doStopScenario() {
+  await forceStopActiveAction();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data loading — separate substances (drugs) from compounds (IV fluids)
+// ─────────────────────────────────────────────────────────────────────────────
+let allScenarios = [];
+
+async function fetchScenarios() {
+  try {
+    const res = await fetch(API + '/scenarios');
+    allScenarios = await res.json();
+    const sel = document.getElementById('sc-dropdown');
+    sel.innerHTML = allScenarios.map(s => `<option value="${s.name}">${s.name.replace(/_/g, ' ')} (${s.category})</option>`).join('');
+    updateScenarioDesc();
+  } catch {}
+}
+
+function updateScenarioDesc() {
+  const selName = str('sc-dropdown');
+  const sc = allScenarios.find(s => s.name === selName);
+  document.getElementById('sc-desc').textContent = sc ? sc.description : '';
+}
+
+async function fetchSubstances() {
+  try {
+    const res = await fetch(API + '/substances');
+    let subs = await res.json();
+    subs.sort();
+    // Filter to only pharmacologically relevant substances for drug infusion
+    const drugList = subs.filter(s => 
+      !s.startsWith('Blood_') && !s.startsWith('Antigen_') &&
+      !['Hemoglobin', 'Oxyhemoglobin', 'Carbaminohemoglobin', 'OxyCarbaminohemoglobin', 'Carboxyhemoglobin',
+        'RedBloodCell', 'WhiteBloodCell', 'Platelet', 'Globulin', 'Plasma',
+        'Oxygen', 'Nitrogen', 'CarbonDioxide', 'CarbonMonoxide',
+        'Triacylglycerol', 'Tristearin', 'AminoAcids', 'Glucose', 'Lactate',
+        'Urea', 'Creatinine', 'Bicarbonate', 'Ketones', 'Acetoacetate',
+        'Glucagon', 'Insulin', 'Albumin', 'Sodium', 'Potassium', 'Chloride',
+        'Calcium', 'Magnesium', 'ForestFireParticulate'
+      ].includes(s)
+    );
+    const selDr = document.getElementById('dr-substance');
+    selDr.innerHTML = drugList.map(s => `<option value="${s}">${s}</option>`).join('');
+    if (drugList.includes('Epinephrine')) selDr.value = 'Epinephrine';
+  } catch {}
+}
+
+async function fetchCompounds() {
+  try {
+    const res = await fetch(API + '/compounds');
+    let compounds = await res.json();
+    const selFl = document.getElementById('fl-fluid');
+    selFl.innerHTML = compounds.map(s => `<option value="${s}">${s.replace(/_/g, ' ')}</option>`).join('');
+    if (compounds.includes('Saline')) selFl.value = 'Saline';
+  } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab switching
+// ─────────────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  ['controls', 'scenarios', 'log'].forEach(t => {
+    document.getElementById('panel-' + t).hidden = (t !== name);
+    document.getElementById('tab-'   + t).classList.toggle('active', t === name);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  fetchScenarios();
+  fetchSubstances();
+  fetchCompounds();
+  addLogEntry('SYSTEM', 'Digital Twin frontend initialized');
+});
+</script>
+</body>
+</html>
